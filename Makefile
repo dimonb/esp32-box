@@ -1,10 +1,11 @@
 #ESPHOME = docker run --rm -p 6052:6052 -e ESPHOME_DASHBOARD_USE_PING=true -v "${PWD}":/config -v "${PWD}/.esphome/platformio":/root/.platformio -it ghcr.io/esphome/esphome
 ESPHOME = esphome
-YTE = .venv/bin/python yte_run.py
-TPL = esp32-s3-box-3-5aac68.yte.yaml
+YTE = .venv/bin/yglu
+TPL = esp32-s3-box-3-5aac68.yglu.yaml
 YML = esp32-s3-box-3-5aac68.yaml
 
-.venv:
+.venv: requirements.txt
+	rm -rf .venv
 	python3 -m venv .venv
 	.venv/bin/pip install -r requirements.txt
 
@@ -15,13 +16,16 @@ $(YML): .venv $(TPL)
 	rm -f $(YML).tmp
 
 run: $(YML)
-	$(ESPHOME) run $(TPL)
+	$(ESPHOME) run $(YML)
 
 upload: $(YML)
-	$(ESPHOME) upload $(TPL)
+	$(ESPHOME) upload $(YML)
+
+compile: $(YML)
+	$(ESPHOME) compile $(YML)
 
 logs: $(YML)
-	$(ESPHOME) logs $(TPL)
+	$(ESPHOME) logs $(YML)
 
 clean: $(YML)
 	rm -rf .esphome/
