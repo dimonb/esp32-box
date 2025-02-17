@@ -47,7 +47,7 @@ substitutions:
 
 ##### DO NOT CHANGE SUBSTITUTIONS BELOW THIS LINE ######
 #####      UNLESS YOU KNOW WHAT YOU ARE DOING     ######  
-  font_glyphs: '&@!"''%()+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyzÀàÁáÂâÃãÄäĀāĂăÅåǺǻẠạĄąÆæǼǽĆćĈĉČčĊċÇçĎďĐđÐðÈèÉéÊêẼẽĚěËëĒēĔĕĖėẸẹĘęĜĝǦǧĞğĠġĢģĤĥĦħıÌìÍíÎîĨĩÏïĪīĬĭİỊịĮįȷĴĵĶķĸĹĺĽľĻļŁłĿŀŃńÑñŇňŅņƝɲŊŋŉÒòÓóÔôÕõÖöŌōŎŏŐőỌọǪǫØøǾǿŒœŔŕŘřŖŗŚśŜŝŠšŞşȘșẞßŤťŢţȚțŦŧÞþÙùÚúÛûŨũÜüŪūŬŭŮůŰűỤụŲųẀẁẂẃŴŵẄẅỲỳÝýŶŷỸỹŸÿȲȳŹźŽžŻżĲĳƏə'  
+  font_glyphs: '&@!"''%()+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyzÀàÁáÂâÃãÄäĀāĂăÅåǺǻẠạĄąÆæǼǽĆćĈĉČčĊċÇçĎďĐđÐðÈèÉéÊêẼẽĚěËëĒēĔĕĖėẸẹĘęĜĝǦǧĞğĠġĢģĤĥĦħıÌìÍíÎîĨĩÏïĪīĬĭİỊịĮįȷĴĵĶķĸĹĺĽľĻļŁłĿŀŃńÑñŇňŅņƝɲŊŋŉÒòÓóÔôÕõÖöŌōŎŏŐőỌọǪǫØøǾǿŒœŔŕŘřŖŗŚśŜŝŠšŞşȘșẞßŤťŢţȚțŦŧÞþÙùÚúÛûŨũÜüŪūŬŭŮůŰűỤụŲųẀẁẂẃŴŵẄẅỲỳÝýŶŷỸỹŸÿȲȳŹźŽžŻżĲĳƏəабвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'  
 
 ############# END OF SUBSTITUTIONS #################
 ####################################################
@@ -1213,12 +1213,14 @@ font:
     id: my_font18
     size: 18
     glyphs:
-      '${font_glyphs}'      
+      '${font_glyphs}'     
+      
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/consola.ttf"
     id: my_font5
     size: 22
     glyphs:
       '${font_glyphs}'
+
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/consola.ttf"
     id: my_font6
     size: 50
@@ -1307,12 +1309,12 @@ draw_icon: !()
 
 buttons: !- 
   - id: status_bar_mute_switch
-    x: 85
+    x: 80
     y: 5
     w: 35
     h: 35
     font: icon_font_35
-    action:
+    on_click:
       - switch.toggle: mute_switch
       - component.update: s3_box_lcd
     draw:
@@ -1323,12 +1325,12 @@ buttons: !-
       - "}"
 
   - id: status_bar_api_connection
-    x: 15
+    x: 10
     y: 5
     w: 35
     h: 35
     font: icon_font_35
-    action:
+    on_click:
       - component.update: s3_box_lcd
     draw:
       - "if(id(api_connection) == true) {"
@@ -1338,12 +1340,12 @@ buttons: !-
       - "}"
 
   - id: status_bar_wifi_connection
-    x: 50
+    x: 45
     y: 5
     w: 35
     h: 35
     font: icon_font_35
-    action:
+    on_click:
       - display.page.show: wifi_page
       - component.update: s3_box_lcd
     draw:
@@ -1353,18 +1355,156 @@ buttons: !-
       - !? ($_.draw_icon)({id=>"status_bar_wifi_connection", color=>"red", icon=>$_.icon_glyphs.wifi_disconnected})
       - "}"
 
+  - id: status_bar_settings_button
+    x: 280
+    y: 5
+    w: 35
+    h: 35
+    font: icon_font_35
+    on_click:
+      - display.page.show: settings_page
+      - component.update: s3_box_lcd
+    draw:
+      - !? ($_.draw_icon)({id=>"status_bar_settings_button", color=>"lime", icon=>$_.icon_glyphs.settings})
+
   - id: temp_sensor_button
     x: 20
     y: 75
     w: 80
     h: 80
     font: icon_font_80
-    action:
+    on_click:
       - display.page.show: climate_page
       - component.update: s3_box_lcd
     draw:
       - !? ($_.draw_icon)({id=>"temp_sensor_button", color=>"blue", icon=>$_.icon_glyphs.temp_sensor})
    
+  - id: light_on_button
+    x: 120
+    y: 75
+    w: 80
+    h: 80
+    font: icon_font_80
+    on_click:
+      - display.page.show: lights_page
+      - component.update: s3_box_lcd
+    draw:
+      - !? ($_.draw_icon)({id=>"light_on_button", color=>"yellow", icon=>$_.icon_glyphs.light_on})
+
+  - id: fan_button
+    x: 220
+    y: 75
+    w: 80
+    h: 80
+    font: icon_font_80
+    on_click:
+      - display.page.show: template_page
+      - component.update: s3_box_lcd
+    draw:
+      - !? ($_.draw_icon)({id=>"fan_button", color=>"purple", icon=>$_.icon_glyphs.fan})
+
+  - id: music_button
+    x: 20
+    y: 155
+    w: 80
+    h: 80
+    font: icon_font_80
+    on_click:
+      - if:
+          condition:
+            switch.is_off: output_audio
+          then:
+            - display.page.show: media_page
+            - component.update: s3_box_lcd
+          else:
+            - display.page.show: ext_media_page
+            - component.update: s3_box_lcd
+    draw:
+      - !? ($_.draw_icon)({id=>"music_button", color=>"red", icon=>$_.icon_glyphs.music})
+
+  - id: scene_button
+    x: 120
+    y: 155
+    w: 80
+    h: 80
+    font: icon_font_80
+    on_click:
+      - display.page.show: scenes_page
+      - component.update: s3_box_lcd
+    draw:
+      - !? ($_.draw_icon)({id=>"scene_button", color=>"blue", icon=>$_.icon_glyphs.scene})
+
+  - id: voice_set
+    x: 5
+    y: 100
+    w: 100
+    h: 65
+    on_click:
+      - display.page.show: ww_set_page
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(20, 160, id(icon_font_35), light_blue,\"\\U000F08D6\");"        
+      - "it.printf(15, 125, id(my_font5), light_blue,\"Voice\");"
+
+  - id: ss_set
+    x: 110
+    y: 100
+    w: 100
+    h: 65
+    on_click:
+      - display.page.show: ss_set_page
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(143, 80, id(icon_font_35), light_blue,\"\\U000F0502\");"
+      - "it.printf(130, 125, id(my_font5), light_blue,\"Saver\");"
+
+  - id: info_set
+    internal: true
+    x: 215
+    y: 100
+    w: 100
+    h: 65
+    on_click:
+      - display.page.show: info_page
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(255, 80, id(icon_font_35), light_blue, \"\\U000F1C6F\");"
+      - "it.printf(245, 125, id(my_font5), light_blue, \"Info\");"           
+           
+  - id: device_set
+    internal: true
+    x: 5
+    y: 175
+    w: 100
+    h: 65
+    on_click:
+      - display.page.show: device_set_page
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(20, 80, id(icon_font_35), light_blue,\"\\U000F036F\");"
+      - "it.printf(15, 205, id(my_font5), light_blue,\"Device\");"
+
+  - id: voice_test 
+    internal: true
+    x: 215
+    y: 175
+    w: 100
+    h: 65
+    on_press:
+      - switch.turn_on: mute_switch
+      - lambda: id(va).set_use_wake_word(false);
+      - delay: 100ms
+      - voice_assistant.start 
+      - wait_until:
+          not:
+            - voice_assistant.is_running
+      - voice_assistant.stop
+    on_release:
+      - switch.turn_off: mute_switch    
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(255, 160, id(icon_font_35), light_blue, \"\\U000F05CB\");"
+      - "it.printf(245, 205, id(my_font5), light_blue, \"Test\");" 
 
 
 touch_pages: !-
@@ -1373,42 +1513,73 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
       - temp_sensor_button 
+      - light_on_button
+      - fan_button
+      - music_button
+      - scene_button
+
   - id: info_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: lights_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: template_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: media_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: ext_media_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: scenes_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: settings_page
     buttons: 
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
+      - voice_set
+      - ss_set
+      - info_set
+      - device_set
+      - voice_test
+
+  - id: wifi_page
+    buttons:
+      - status_bar_mute_switch
+      - status_bar_api_connection
+      - status_bar_wifi_connection
+      - status_bar_settings_button
+
   - id: other_test_page
     buttons:
       - other_button
@@ -1433,15 +1604,11 @@ header_icons: !-
   - "else if(id(alarm_status).state == \"armed_night\") {"
   - "        it.printf(250, 5, id(icon_font_35), green, \"\\U000F1828\");"
   - "}"
-  
+
 idle_page_lambda: !-
-  - !? $_.header_icons.join('\n')
-  - !? list($_.buttons.where($.id = "temp_sensor_button").draw)[0].join('\n')
-  - "it.printf(120, 75, id(icon_font_80), yellow,\"\\U000F06E8\" );"
-  - "it.printf(220, 75, id(icon_font_80), purple,\"\\U000F0210\");"
-  - "it.printf(20, 155, id(icon_font_80), red,\"\\U000F075A\");"
-  - "it.printf(120, 155, id(icon_font_80), blue,\"\\U000F0FCE\");"
-  - "it.printf(220, 155, id(icon_font_80), lime,\"\\U000F08D6\");"
+  - ? !for .touch_pages.where($.id = "idle_page").first().buttons
+    : !()
+      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
 
 template_page_lambda: !-
   - !? $_.header_icons.join('\n')
@@ -1451,6 +1618,37 @@ template_page_lambda: !-
   - "it.printf(20, 155, id(icon_font_80), light_blue,\"\\U000F06E8\");"
   - "it.printf(120, 155, id(icon_font_80), light_blue,\"\\U000F06E8\");"
   - "it.printf(220, 155, id(icon_font_80), light_blue, \"\\U000F06E8\");"
+
+settings_page_lambda: !-
+  - ? !for .touch_pages.where($.id = "settings_page").first().buttons
+    : !()
+      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+  - "it.printf(160, 60, id(my_font5), light_blue, TextAlign::CENTER, \"settings\");" # settings text
+  - "it.image((it.get_width() / 2), 195, id(logo_img), ImageAlign::CENTER);"  # logo image
+
+info_page_lambda: !-
+  - ? !for .touch_pages.where($.id = "info_page").first().buttons
+    : !()
+      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+  - "it.printf(160, 75, id(my_font5), light_blue, TextAlign::CENTER, \"IP Address\");"
+  - "it.printf(160, 95, id(my_font18), yellow, TextAlign::CENTER, \"%s\", id(ip_addr).state.c_str());"
+  - "it.printf(160, 125, id(my_font5), light_blue, TextAlign::CENTER, \"Host Name\");"
+  - "it.printf(160, 145, id(my_font18), yellow, TextAlign::CENTER, \"${name}.local\");"
+  - "it.printf(160, 175, id(my_font5), light_blue, TextAlign::CENTER, \"Device Uptime DDD:H:M:S\");"
+  - "it.printf(160, 195, id(my_font18), yellow, TextAlign::CENTER, \"%s\", id(up_sens_text).state.c_str());"
+
+wifi_page_lambda: !-
+  - ? !for .touch_pages.where($.id = "wifi_page").first().buttons
+    : !()
+      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+  - "it.printf(160, 75, id(my_font5), light_blue, TextAlign::CENTER, \"ssid\");"
+  - "it.printf(160, 95, id(my_font18), yellow, TextAlign::CENTER, \"%s\", id(connected_ssid).state.c_str());"
+  - "it.printf(160, 125, id(my_font5), light_blue, TextAlign::CENTER, \"bssid\");"
+  - "it.printf(160, 145, id(my_font18), yellow, TextAlign::CENTER, \"%s\", id(connected_bssid).state.c_str());"
+  - "it.printf(160, 175, id(my_font5), light_blue, TextAlign::CENTER, \"Device MAC\");"
+  - "it.printf(160, 195, id(my_font18), yellow, TextAlign::CENTER, \"%s\", id(device_mac).state.c_str());"
+  - "it.printf(38, 210, id(my_font5), light_blue, TextAlign::LEFT, \"Signal Strength\");"
+  - "it.printf(283, 210, id(my_font5), yellow, TextAlign::RIGHT, \"%4.f%%\", id(wifi_percent).state);"
 
 display:
   - platform: ili9xxx
@@ -1477,46 +1675,8 @@ display:
         lambda: !? $_.template_page_lambda.join('\n')
           
       - id: info_page ##### info page #####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }  
-          it.printf(160, 75, id(my_font5), light_blue, TextAlign::CENTER, "IP Address");
-          it.printf(160, 95, id(my_font5), yellow, TextAlign::CENTER, "%s", id(ip_addr).state.c_str());
-          it.printf(160, 125, id(my_font5), light_blue, TextAlign::CENTER, "Host Name");
-          it.printf(160, 145, id(my_font5), yellow, TextAlign::CENTER, "${name}.local");
-          it.printf(160, 175, id(my_font5), light_blue, TextAlign::CENTER, "Device Uptime DDD:H:M:S");
-          it.printf(160, 195, id(my_font5), yellow, TextAlign::CENTER, "%s", id(up_sens_text).state.c_str());
-          
+        lambda: !? $_.info_page_lambda.join('\n')
+
       - id: ss_set_page ##### screen saver settings page #####
         lambda: |-
           it.fill(id(black));
@@ -1847,51 +2007,8 @@ display:
           it.printf(160,190, id(my_font3), red, TextAlign::CENTER, "won't be long....");
           
       - id: settings_page ##### settings parent page #####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }          
-          it.printf(160, 65, id(my_font5), light_blue, TextAlign::CENTER, "settings");         
-          it.printf(20, 80, id(icon_font_35), light_blue,"\U000F036F");
-          it.printf(140, 80, id(icon_font_35), light_blue,"\U000F0502");
-          it.printf(255, 80, id(icon_font_35), light_blue, "\U000F1C6F");  
-          it.printf(15, 210, id(my_font5), light_blue,"Device");
-          it.printf(245, 130, id(my_font5), light_blue, "Info");           
-          it.printf(20, 160, id(icon_font_35), light_blue,"\U000F08D6");        
-          it.printf(255, 160, id(icon_font_35), light_blue, "\U000F05CB");
-          it.printf(15, 130, id(my_font5), light_blue,"Voice");
-          it.printf(135, 130, id(my_font5), light_blue,"Saver");
-          it.printf(245, 210, id(my_font5), light_blue, "Test"); 
-          it.image((it.get_width() / 2), 195, id(logo_img), ImageAlign::CENTER);
+        lambda: !? $_.settings_page_lambda.join('\n')
+
           
       - id: device_set_page ##### Device settings page #####
         lambda: |-
@@ -1972,47 +2089,8 @@ display:
           it.printf(160, 155, id(my_font6), light_blue, TextAlign::CENTER, "%s", id(time_remaining_0).state.c_str()); 
           
       - id: wifi_page ##### wifi info page #####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }  
-          it.printf(160, 75, id(my_font5), light_blue, TextAlign::CENTER, "ssid");
-          it.printf(160, 95, id(my_font5), yellow, TextAlign::CENTER, "%s", id(connected_ssid).state.c_str());
-          it.printf(160, 125, id(my_font5), light_blue, TextAlign::CENTER, "bssid");
-          it.printf(160, 145, id(my_font5), yellow, TextAlign::CENTER, "%s", id(connected_bssid).state.c_str());
-          it.printf(160, 175, id(my_font5), light_blue, TextAlign::CENTER, "Device MAC");
-          it.printf(160, 195, id(my_font5), yellow, TextAlign::CENTER, "%s", id(device_mac).state.c_str());
-          it.printf(38, 210, id(my_font5), light_blue, TextAlign::LEFT, "Signal Strength");
-          it.printf(283, 210, id(my_font5), yellow, TextAlign::RIGHT, "%4.f%%", id(wifi_percent).state);
+        lambda: !? $_.wifi_page_lambda.join('\n')
+
 
       - id: alarm_page   #### alarm page #####
         lambda: |-
@@ -2285,11 +2363,20 @@ binary_sensor:
       x_max: !? $.x + $.w
       y_min: !? $.y
       y_max: !? $.y + $.h
-      on_click:
-        min_length: 10ms
-        max_length: 500ms
-        then: 
-          !? $.action
+      !if $.containsKey("on_click"):
+        on_click:
+          min_length: 10ms
+          max_length: 500ms
+          then: 
+            !? $.on_click
+      !if $.containsKey("on_press"):
+        on_press:
+          then:
+            !? $.on_press
+      !if $.containsKey("on_release"):
+        on_release:
+          then:
+            !? $.on_release
               
   # - platform: touchscreen
   #   pages:
@@ -2315,88 +2402,7 @@ binary_sensor:
   #       - component.update: s3_box_lcd
 
 ##### settings page ####
-  - platform: touchscreen
-    page_id: settings_page
-    id: voice_set
-    internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 100
-    y_max: 165
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: ww_set_page
-        - component.update: s3_box_lcd
 
-  - platform: touchscreen
-    page_id: settings_page
-    id: ss_set
-    internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 100
-    y_max: 165
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: ss_set_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: settings_page
-    id: info_set
-    internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 100
-    y_max: 165
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: info_page
-        - component.update: s3_box_lcd
-        
-  - platform: touchscreen
-    page_id: settings_page
-    id: device_set
-    internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 175
-    y_max: 240
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: device_set_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: settings_page
-    id: voice_test 
-    internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 175
-    y_max: 240
-    on_press:
-      then:
-        - switch.turn_on: mute_switch
-        - lambda: id(va).set_use_wake_word(false);
-        - delay: 100ms
-        - voice_assistant.start 
-        - wait_until:
-            not:
-              - voice_assistant.is_running
-        - voice_assistant.stop
-    on_release:
-      then:
-        - switch.turn_off: mute_switch    
-        - component.update: s3_box_lcd
         
   - platform: touchscreen
     pages:
@@ -2413,90 +2419,7 @@ binary_sensor:
       then:
         - display.page.show: settings_page
         - component.update: s3_box_lcd
-#########################################
-##### idle / home page ####
 
-  - platform: touchscreen
-    page_id: idle_page
-    id: control_2
-    internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 90
-    y_max: 170
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: lights_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: idle_page
-    id: control_3
-    internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 90
-    y_max: 170
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: template_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: idle_page
-    id: control_4
-    internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 175
-    y_max: 240
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        if:
-          condition:
-            switch.is_off: output_audio
-          then:
-            - display.page.show: media_page
-            - component.update: s3_box_lcd
-          else:
-            - display.page.show: ext_media_page
-            - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: idle_page
-    id: control_5
-    internal: true
-    x_min: 110
-    x_max: 210
-    y_min: 175
-    y_max: 240
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: scenes_page
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: idle_page
-    id: control_6 
-    internal: true
-    x_min: 215
-    x_max: 315
-    y_min: 175
-    y_max: 240
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: settings_page
-        - component.update: s3_box_lcd   
             
 #### climate page #####
   - platform: touchscreen
