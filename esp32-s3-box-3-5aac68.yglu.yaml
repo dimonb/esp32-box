@@ -663,6 +663,13 @@ sensor:
       component.update: s3_box_lcd
 
   - platform: homeassistant
+    id: openweathermap_temperature
+    entity_id: sensor.openweathermap_temperature
+    internal: True
+    on_value:
+      component.update: s3_box_lcd
+
+  - platform: homeassistant
     id: temperature_bedroom
     entity_id: sensor.sensor_temp02_temperature
     internal: True
@@ -740,6 +747,7 @@ text_sensor:
   - platform: template
     id: time_display_format
     update_interval: never
+
   - platform: homeassistant
     entity_id: media_player.${external_media_player}
     id: ha_media_status
@@ -759,6 +767,14 @@ text_sensor:
     id: alarm_status  
     on_value:
       - component.update: s3_box_lcd    
+
+  - platform: homeassistant
+    name: "Weather Condition"
+    entity_id: sensor.openweathermap_condition
+    id: openweathermap_condition
+    on_value:
+      - component.update: s3_box_lcd
+      
       
 i2s_audio:
   - id: i2s_shared
@@ -1156,6 +1172,22 @@ icon_glyphs: !-
   batt_charge: "\U000F1C3B"   # battery charging/usb powered
   info:        "\U000F1C6F"
   co2:         "\U000F07E4"
+  weather_cloudy: "\U000F0590"
+  weather_fog: "\U000F0591"
+  weather_hail: "\U000F0592"
+  weather_lightning: "\U000F0593"
+  weather_night: "\U000F0594"
+  weather_partly_cloudy: "\U000F0595"
+  weather_pouring: "\U000F0596"
+  weather_rainy: "\U000F0597"
+  weather_snowy: "\U000F0598"
+  weather_sunny: "\U000F0599"
+  weather_sunset: "\U000F059A"
+  weather_sunset_down: "\U000F059B"
+  weather_sunset_up: "\U000F059C"
+  weather_windy: "\U000F059D"
+  weather_windy_variant: "\U000F059E"
+
 
 image:
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/error.png"
@@ -1391,6 +1423,48 @@ buttons: !-
       - !? ($_.draw_icon)({id=>"light_control_button", color=>"blue", icon=>$_.icon_glyphs.light_on})
       - "}"
 
+  - id: weather_current_condition
+    draw:
+      - "if(id(openweathermap_condition).has_state()) {"
+      - !? '" auto glyph = \"" + $_.icon_glyphs.weather_sunny + "\";"'
+      - "  auto state = id(openweathermap_condition).state;"
+      - "  if(state == \"clear-night\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_night + "\";"'
+      - "  } else if(state == \"cloudy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_cloudy + "\";"'
+      - "  } else if(state == \"exceptional\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_sunny + "\";"'
+      - "  } else if(state == \"fog\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_fog + "\";"'
+      - "  } else if(state == \"hail\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_hail + "\";"'
+      - "  } else if(state == \"lightning-rainy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_lightning + "\";"'
+      - "  } else if(state == \"lightning\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_lightning + "\";"'
+      - "  } else if(state == \"partlycloudy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_partly_cloudy + "\";"'
+      - "  } else if(state == \"pouring\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_pouring + "\";"'
+      - "  } else if(state == \"rainy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_rainy + "\";"'
+      - "  } else if(state == \"snowy-rainy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_snowy + "\";"'
+      - "  } else if(state == \"snowy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_snowy + "\";"'
+      - "  } else if(state == \"sunny\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_sunny + "\";"'
+      - "  } else if(state == \"windy-variant\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_windy_variant + "\";"'
+      - "  } else if(state == \"windy\") {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_windy + "\";"'
+      - "  } else {"
+      - !? '"    glyph = \"" + $_.icon_glyphs.weather_sunny + "\";"'
+      - "  }"
+      - "  it.printf(215, 154, id(icon_font_60), id(white), glyph);"
+      - "  it.printf(267, 202, id(my_font22), id(white), COLOR_OFF, TextAlign::LEFT, \"%.0f°\", id(openweathermap_temperature).state);"
+      - "}"
+
   - id: fan_button
     x: 220
     y: 75
@@ -1531,6 +1605,36 @@ buttons: !-
       - "it.printf(160, 60, id(my_font22), light_blue, TextAlign::CENTER, \"settings\");" # settings text
       - "it.image((it.get_width() / 2), 195, id(logo_img), ImageAlign::CENTER);"  # logo image
 
+  - id: media_page 
+    draw:
+      - "if(id(media_state) == true) {"
+      - "  it.printf(160, 80, id(my_font22), lime, TextAlign::CENTER, \"Playing\");"
+      - "} else {"
+      - "  it.printf(160, 80, id(my_font22), light_blue, TextAlign::CENTER, \"Nothing Playing\");"
+      - "}"
+      - "it.printf(20, 100, id(icon_font_75), blue,\"\\U000F075E\");"
+      - "it.printf(120, 100, id(icon_font_75), blue,\"\\U000F040E\");"
+      - "it.printf(220, 100, id(icon_font_75), blue,\"\\U000F075D\");"
+      - "if(id(media_mute).state) {"
+      - "  it.printf(120, 165, id(icon_font_75), red,\"\\U000F0581\");"
+      - "} else {"
+      - "  it.printf(120, 165, id(icon_font_75), lime,\"\\U000F057E\");"
+      - "}"
+
+  - id: ext_media_page
+    draw:
+      - "it.printf(160, 80, id(my_font22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());"
+      - "it.printf(20, 100, id(icon_font_75), blue,\"\\U000F04AE\");"
+      - "it.printf(120, 100, id(icon_font_75), blue,\"\\U000F040E\");"
+      - "it.printf(220, 100, id(icon_font_75), blue,\"\\U000F04AD\");"
+      - "if(id(ext_media_mute).state) {"          
+      - "  it.printf(120, 165, id(icon_font_75), red,\"\\U000F0581\");"
+      - "} else {"        
+      - "  it.printf(120, 165, id(icon_font_75), lime,\"\\U000F057E\");"
+      - "}"
+      - "it.printf(20, 165, id(icon_font_75), blue,\"\\U000F075E\");"
+      - "it.printf(220, 165, id(icon_font_75), blue,\"\\U000F075D\");"
+
 touch_pages: !-
   - id: idle_page
     buttons: 
@@ -1545,6 +1649,7 @@ touch_pages: !-
       - music_button
       - light_control_button
       - current_time
+      - weather_current_condition
 
   - id: info_page
     buttons: 
@@ -1617,8 +1722,24 @@ touch_pages: !-
       - status_bar_settings_button
       - wifi_info
 
+  - id: media_page
+    buttons:
+      - status_bar_title
+      - status_bar_mute_switch
+      - status_bar_api_connection
+      - status_bar_wifi_connection
+      - status_bar_settings_button
+      - media_page
 
-
+  - id: ext_media_page
+    buttons:
+      - status_bar_title
+      - status_bar_mute_switch
+      - status_bar_api_connection
+      - status_bar_wifi_connection
+      - status_bar_settings_button
+      - ext_media_page
+      
 rendered_pages: !-
   - !? |
     $_.touch_pages.join( 
@@ -1764,98 +1885,7 @@ static_pages: !-
       it.printf(120, 155, id(icon_font_75), light_blue,"\U000F0335");
       it.printf(220, 155, id(icon_font_75), light_blue, "\U000F0335");
 
-  - id: media_page ##### media player page #####
-    lambda: |-  
-      it.fill(id(black));
-      if(id(api_connection) == true) {
-              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-      } else {
-              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-      }
-      if(id(wifi_connection) == true) {
-              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-      } else {
-              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-      }
-      if(id(time_remaining_0).state == "0:00:00"){
-      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-      } else {
-      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-      }
-      if(id(mute_switch).state) {
-              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-      } else {
-              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-      }
-      if(id(alarm_status).state == "disarmed") {
-      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-      } else if(id(alarm_status).state == "arming") {
-      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-      } else if(id(alarm_status).state == "armed_home") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-      } else if(id(alarm_status).state == "armed_away") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-      } else if(id(alarm_status).state == "armed_night") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-      }  
-      if(id(media_state) == true) {
-              it.printf(160, 80, id(my_font22), lime, TextAlign::CENTER, "Playing");
-      } else {
-              it.printf(160, 80, id(my_font22), light_blue, TextAlign::CENTER, "Nothing Playing");
-      }
-      it.printf(20, 100, id(icon_font_75), blue,"\U000F075E");
-      it.printf(120, 100, id(icon_font_75), blue,"\U000F040E");
-      it.printf(220, 100, id(icon_font_75), blue,"\U000F075D");
-      if(id(media_mute).state) {          
-              it.printf(120, 165, id(icon_font_75), red,"\U000F0581");
-      } else {        
-              it.printf(120, 165, id(icon_font_75), lime,"\U000F057E");
-      }
-  - id: ext_media_page ##### media player page #####
-    lambda: |-  
-      it.fill(id(black));
-      if(id(api_connection) == true) {
-              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-      } else {
-              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-      }
-      if(id(wifi_connection) == true) {
-              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-      } else {
-              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-      }
-      if(id(time_remaining_0).state == "0:00:00"){
-      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-      } else {
-      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-      }
-      if(id(mute_switch).state) {
-              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-      } else {
-              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-      }
-      if(id(alarm_status).state == "disarmed") {
-      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-      } else if(id(alarm_status).state == "arming") {
-      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-      } else if(id(alarm_status).state == "armed_home") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-      } else if(id(alarm_status).state == "armed_away") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-      } else if(id(alarm_status).state == "armed_night") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-      }  
-      it.printf(160, 80, id(my_font22), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
-      it.printf(20, 100, id(icon_font_75), blue,"\U000F04AE");
-      it.printf(120, 100, id(icon_font_75), blue,"\U000F040E");
-      it.printf(220, 100, id(icon_font_75), blue,"\U000F04AD");
-      if(id(ext_media_mute).state) {          
-              it.printf(120, 165, id(icon_font_75), red,"\U000F0581");
-      } else {        
-              it.printf(120, 165, id(icon_font_75), lime,"\U000F057E");
-      }
-      it.printf(20, 165, id(icon_font_75), blue,"\U000F075E");
-      it.printf(220, 165, id(icon_font_75), blue,"\U000F075D");
+
       
   - id: scenes_page ##### scenes page #####
     lambda: |-
