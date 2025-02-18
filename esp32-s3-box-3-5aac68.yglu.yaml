@@ -1300,13 +1300,14 @@ draw_icon: !()
 buttons: !- 
   - id: status_bar_title
     draw:
+      - "auto x = 150;"
+      - "if(id(temperature_bedroom).has_state()) {"
+      - "   it.printf(x, 10, id(my_font28), blue, COLOR_OFF, TextAlign::LEFT, \"%.1f°\", id(temperature_bedroom).state);"
+      - "}"
       - "if(id(co2_bedroom).has_state()) {"
       - "   auto co2_color = id(co2_bedroom).state > 1000 ? (id(co2_bedroom).state > 1500 ? red : amber) : green;"
-      - "   it.printf(200, 10, id(my_font28), co2_color, COLOR_OFF, TextAlign::LEFT, \"%4.0f\", id(co2_bedroom).state);"
-      - !? '"   it.printf(260, 13, id(icon_font_25), co2_color,\"" + $_.icon_glyphs.co2 + "\");"'
-      - "}"
-      - "if(id(temperature_bedroom).has_state()) {"
-      - "   it.printf(123, 10, id(my_font28), blue, COLOR_OFF, TextAlign::LEFT, \"%.1f°\", id(temperature_bedroom).state);"
+      - "   it.printf(x + 77, 10, id(my_font28), co2_color, COLOR_OFF, TextAlign::LEFT, \"%4.0f\", id(co2_bedroom).state);"
+      - !? '"   it.printf(x + 137, 13, id(icon_font_25), co2_color,\"" + $_.icon_glyphs.co2 + "\");"'
       - "}"
 
   - id: status_bar_mute_switch
@@ -1332,6 +1333,7 @@ buttons: !-
     h: 35
     font: icon_font_35
     on_click:
+      - display.page.show: settings_page
       - component.update: s3_box_lcd
     draw:
       - "if(id(api_connection) == true) {"
@@ -1720,7 +1722,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
       #- temp_sensor_button 
       #- light_on_button
       #- fan_button
@@ -1735,7 +1737,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
       - device_info
 
   # - id: lights_page
@@ -1752,7 +1754,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
 
   # - id: media_page
   #   buttons: 
@@ -1797,7 +1799,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
       - wifi_info
 
   - id: media_page
@@ -1806,7 +1808,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
       - media_page
 
   - id: ext_media_page
@@ -1815,7 +1817,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
       - ext_media_page
 
   - id: device_set_page 
@@ -1824,7 +1826,7 @@ touch_pages: !-
       - status_bar_mute_switch
       - status_bar_api_connection
       - status_bar_wifi_connection
-      - status_bar_settings_button
+      #- status_bar_settings_button
       - device_set_back
       - s_default_bright_down
       - s_default_bright_up
