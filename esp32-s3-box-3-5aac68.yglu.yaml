@@ -1590,13 +1590,13 @@ touch_pages: !-
       - status_bar_settings_button
       - device_info
 
-  - id: lights_page
-    buttons: 
-      - status_bar_title
-      - status_bar_mute_switch
-      - status_bar_api_connection
-      - status_bar_wifi_connection
-      - status_bar_settings_button
+  # - id: lights_page
+  #   buttons: 
+  #     - status_bar_title
+  #     - status_bar_mute_switch
+  #     - status_bar_api_connection
+  #     - status_bar_wifi_connection
+  #     - status_bar_settings_button
 
   - id: template_page
     buttons: 
@@ -1606,29 +1606,29 @@ touch_pages: !-
       - status_bar_wifi_connection
       - status_bar_settings_button
 
-  - id: media_page
-    buttons: 
-      - status_bar_title
-      - status_bar_mute_switch
-      - status_bar_api_connection
-      - status_bar_wifi_connection
-      - status_bar_settings_button
+  # - id: media_page
+  #   buttons: 
+  #     - status_bar_title
+  #     - status_bar_mute_switch
+  #     - status_bar_api_connection
+  #     - status_bar_wifi_connection
+  #     - status_bar_settings_button
 
-  - id: ext_media_page
-    buttons: 
-      - status_bar_title
-      - status_bar_mute_switch
-      - status_bar_api_connection
-      - status_bar_wifi_connection
-      - status_bar_settings_button
+  # - id: ext_media_page
+  #   buttons: 
+  #     - status_bar_title
+  #     - status_bar_mute_switch
+  #     - status_bar_api_connection
+  #     - status_bar_wifi_connection
+  #     - status_bar_settings_button
 
-  - id: scenes_page
-    buttons: 
-      - status_bar_title
-      - status_bar_mute_switch
-      - status_bar_api_connection
-      - status_bar_wifi_connection
-      - status_bar_settings_button
+  # - id: scenes_page
+  #   buttons: 
+  #     - status_bar_title
+  #     - status_bar_mute_switch
+  #     - status_bar_api_connection
+  #     - status_bar_wifi_connection
+  #     - status_bar_settings_button
 
   - id: settings_page
     buttons: 
@@ -1653,30 +1653,587 @@ touch_pages: !-
       - wifi_info
 
 
-idle_page_lambda: !-
-  - ? !for .touch_pages.where($.id = "idle_page").first().buttons
-    : !()
-      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
 
-template_page_lambda: !-
-  - ? !for .touch_pages.where($.id = "template_page").first().buttons
-    : !()
-      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+rendered_pages: !-
+  - !? |
+    $_.touch_pages.join( 
+      $_.buttons, $1.buttons.any($ = $2.id), 
+      [dict(id => $1.id, draw => $2.draw)]
+    )
+      .select($[0])
+      .groupBy($.id)
+      .map(
+        dict(
+          "id" => $[0], 
+          "lambda" => $[1].draw.aggregate($1.concat($2), []).join('\n')
+          )
+      )
 
-settings_page_lambda: !-
-  - ? !for .touch_pages.where($.id = "settings_page").first().buttons
-    : !()
-      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+static_pages: !-
+  - id: ss_set_page ##### screen saver settings page #####
+    lambda: |-
+      it.fill(id(black));
+      it.printf(160, 70, id(icon_font_80), light_blue, TextAlign::CENTER, "\U000F08D6");  
+      it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Screensaver Settings");
+      it.printf(250, 115, id(my_font5), light_blue, TextAlign::RIGHT, "Timeout Settings :");
+      it.printf(255, 95, id(icon_font_35), lime, "\U000F08D6");
+      it.printf(250, 145, id(my_font5), light_blue, TextAlign::RIGHT, "Enable screensaver :");
+      if(id(s_saver).state) {
+              it.printf(255, 135, id(icon_font_35), lime, "\U000F0521");
+      } else {   
+              it.printf(255, 135, id(icon_font_35), blue_drk, "\U000F0A19");
+      } 
+      it.printf(250, 205, id(my_font5), light_blue, TextAlign::RIGHT, "Timeout to blank :");          
+      if(id(s_saver_mode).state) {
+              it.printf(255, 195, id(icon_font_35), lime, "\U000F0521");
+      } else {   
+              it.printf(255, 195, id(icon_font_35), blue_drk, "\U000F0A19");
+      }         
+      
+  - id: ww_set_page ##### voice settings page #####
+    lambda: |-
+      it.fill(id(black));
+      it.printf(160, 50, id(icon_font_35), light_blue, TextAlign::CENTER, "\U000F08D6");  
+      it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Voice Settings");
+      it.printf(155, 85, id(my_font5), light_blue, TextAlign::CENTER, "tap to change");
+      it.printf(135, 115, id(my_font5), light_blue, TextAlign::RIGHT, "WakeWord :");
+      it.printf(310, 115, id(my_font5), lime, TextAlign::RIGHT, "%s", id(wakeword_location).state.c_str());
+      it.printf(250, 145, id(my_font5), light_blue, TextAlign::RIGHT, "Mute responses :"); 
+      if(id(mute_response_switch).state) {
+              it.printf(255, 135, id(icon_font_35), lime, "\U000F0521");
+      } else {   
+              it.printf(255, 135, id(icon_font_35), blue_drk, "\U000F0A19");
+      }          
+      it.printf(250, 175, id(my_font5), light_blue, TextAlign::RIGHT, "Wake up sound :");          
+      if(id(wake_sound).state) {
+              it.printf(255, 165, id(icon_font_35), lime, "\U000F0521");
+      } else {   
+              it.printf(255, 165, id(icon_font_35), blue_drk, "\U000F0A19");
+      } 
+      it.printf(250, 205, id(my_font5), light_blue, TextAlign::RIGHT, "Show Conversation :");          
+      if(id(display_conversation).state) {
+              it.printf(255, 195, id(icon_font_35), lime, "\U000F0521");
+      } else {   
+              it.printf(255, 195, id(icon_font_35), blue_drk, "\U000F0A19");
+      }           
+      
+  - id: climate_page ##### climate page #####
+    lambda: |-
+      it.fill(id(black));
+      if(id(api_connection) == true) {
+              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
+      } else {
+              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
+      }
+      if(id(wifi_connection) == true) {
+              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
+      } else {
+              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
+      }
+      if(id(time_remaining_0).state == "0:00:00"){
+      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
+      } else {
+      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
+      }
+      if(id(mute_switch).state) {
+              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
+      } else {
+              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
+      }
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
+      }  
+      it.printf(20, 75, id(icon_font_80), light_blue,"\U000F050F");
+      it.printf(120, 75, id(icon_font_80), light_blue,"\U000F050F");
+      it.printf(220, 75, id(icon_font_80), light_blue, "\U000F050F");
+      it.printf(20, 155, id(icon_font_80), light_blue,"\U000F050F");
+      it.printf(120, 155, id(icon_font_80), light_blue,"\U000F050F");
+      it.printf(220, 155, id(icon_font_80), light_blue, "\U000F050F");
 
-info_page_lambda: !-
-  - ? !for .touch_pages.where($.id = "info_page").first().buttons
-    : !()
-      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+  - id: lights_page ##### lights page ####
+    lambda: |-
+      it.fill(id(black));
+      if(id(api_connection) == true) {
+              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
+      } else {
+              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
+      }
+      if(id(wifi_connection) == true) {
+              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
+      } else {
+              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
+      }
+      if(id(time_remaining_0).state == "0:00:00"){
+      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
+      } else {
+      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
+      }
+      if(id(mute_switch).state) {
+              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
+      } else {
+              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
+      }
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
+      }  
+      it.printf(20, 75, id(icon_font_80), light_blue,"\U000F0335");
+      it.printf(120, 75, id(icon_font_80), light_blue,"\U000F0335");
+      it.printf(220, 75, id(icon_font_80), light_blue, "\U000F0335");
+      it.printf(20, 155, id(icon_font_80), light_blue,"\U000F0335");
+      it.printf(120, 155, id(icon_font_80), light_blue,"\U000F0335");
+      it.printf(220, 155, id(icon_font_80), light_blue, "\U000F0335");
 
-wifi_page_lambda: !-
-  - ? !for .touch_pages.where($.id = "wifi_page").first().buttons
-    : !()
-      - !? let(btn => $) -> list($_.buttons.where($.id = $btn).draw)[0].join('\n')
+  - id: media_page ##### media player page #####
+    lambda: |-  
+      it.fill(id(black));
+      if(id(api_connection) == true) {
+              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
+      } else {
+              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
+      }
+      if(id(wifi_connection) == true) {
+              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
+      } else {
+              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
+      }
+      if(id(time_remaining_0).state == "0:00:00"){
+      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
+      } else {
+      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
+      }
+      if(id(mute_switch).state) {
+              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
+      } else {
+              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
+      }
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
+      }  
+      if(id(media_state) == true) {
+              it.printf(160, 80, id(my_font5), lime, TextAlign::CENTER, "Playing");
+      } else {
+              it.printf(160, 80, id(my_font5), light_blue, TextAlign::CENTER, "Nothing Playing");
+      }
+      it.printf(20, 100, id(icon_font_80), blue,"\U000F075E");
+      it.printf(120, 100, id(icon_font_80), blue,"\U000F040E");
+      it.printf(220, 100, id(icon_font_80), blue,"\U000F075D");
+      if(id(media_mute).state) {          
+              it.printf(120, 165, id(icon_font_80), red,"\U000F0581");
+      } else {        
+              it.printf(120, 165, id(icon_font_80), lime,"\U000F057E");
+      }
+  - id: ext_media_page ##### media player page #####
+    lambda: |-  
+      it.fill(id(black));
+      if(id(api_connection) == true) {
+              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
+      } else {
+              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
+      }
+      if(id(wifi_connection) == true) {
+              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
+      } else {
+              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
+      }
+      if(id(time_remaining_0).state == "0:00:00"){
+      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
+      } else {
+      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
+      }
+      if(id(mute_switch).state) {
+              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
+      } else {
+              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
+      }
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
+      }  
+      it.printf(160, 80, id(my_font5), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
+      it.printf(20, 100, id(icon_font_80), blue,"\U000F04AE");
+      it.printf(120, 100, id(icon_font_80), blue,"\U000F040E");
+      it.printf(220, 100, id(icon_font_80), blue,"\U000F04AD");
+      if(id(ext_media_mute).state) {          
+              it.printf(120, 165, id(icon_font_80), red,"\U000F0581");
+      } else {        
+              it.printf(120, 165, id(icon_font_80), lime,"\U000F057E");
+      }
+      it.printf(20, 165, id(icon_font_80), blue,"\U000F075E");
+      it.printf(220, 165, id(icon_font_80), blue,"\U000F075D");
+      
+  - id: scenes_page ##### scenes page #####
+    lambda: |-
+      it.fill(id(black));
+      if(id(api_connection) == true) {
+              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
+      } else {
+              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
+      }
+      if(id(wifi_connection) == true) {
+              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
+      } else {
+              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
+      }
+      if(id(time_remaining_0).state == "0:00:00"){
+      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
+      } else {
+      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
+      }
+      if(id(mute_switch).state) {
+              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
+      } else {
+              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
+      }
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
+      }    
+      it.printf(20, 75, id(icon_font_80), light_blue,"\U000F0FCE");
+      it.printf(120, 75, id(icon_font_80), light_blue,"\U000F0FCE");
+      it.printf(220, 75, id(icon_font_80), light_blue, "\U000F0FCE");
+      it.printf(20, 155, id(icon_font_80), light_blue,"\U000F0FCE");
+      it.printf(120, 155, id(icon_font_80), light_blue,"\U000F0FCE");
+      it.printf(220, 155, id(icon_font_80), light_blue, "\U000F0FCE");
+
+
+  - id: loading_page ### loading page #####
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.image((it.get_width() / 2), (it.get_height() / 2), id(loading_img), ImageAlign::CENTER);
+
+  - id: listening_page
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.image((it.get_width() / 2), (it.get_height() / 2), id(listening_img), ImageAlign::CENTER);
+  
+  - id: thinking_page
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.image((it.get_width() / 2), (it.get_height() / 2), id(thinking_img), ImageAlign::CENTER);
+      if (id(display_conversation).state) {
+        it.filled_rectangle(0 , 0 , 320 , 30 , Color::WHITE );
+        it.printf(10, 10, id(my_font16), Color::BLACK, "%s", id(text_request).state.c_str());
+      }          
+  - id: replying_page
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.image((it.get_width() / 2), (it.get_height() / 2), id(replying_img), ImageAlign::CENTER);
+      if (id(display_conversation).state) {
+        it.filled_rectangle(0 , 0 , 320 , 30 , Color::WHITE );
+        it.filled_rectangle(0 , 210 , 320 , 30 , Color::WHITE );
+        it.printf(10, 10, id(my_font16), Color::BLACK, "%s", id(text_request).state.c_str());
+        it.printf(10, 220, id(my_font16), Color::BLACK, "%s", id(text_response).state.c_str());
+      }
+  - id: error_page
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.image((it.get_width() / 2), (it.get_height() / 2), id(error_img), ImageAlign::CENTER);
+      
+  - id: timer_finished_page
+    lambda: |-
+      it.fill(id(black));
+      it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Timer Finished");
+      it.printf(160, 120, id(icon_font_180), light_blue, TextAlign::CENTER, "\U000F009E");
+      it.printf(160, 215, id(my_font5), light_blue, TextAlign::CENTER, "tap screen to dismiss");
+
+  - id: muted_page
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.printf(160, 120, id(my_font4), yellow, TextAlign::CENTER, "Mic & Speaker - Muted");
+
+  - id: saver_page ##### screen saver display page #####
+    lambda: |-
+      it.fill(id(black));
+        
+      const char *days[] {"${sunday}","${monday}","${tuesday}","${wednesday}","${thursday}","${friday}","${saturday}"};
+      const char *months[] {"${jan}","${feb}","${mar}","${apr}","${may}","${jun}","${jul}","${aug}","${sept}","${oct}","${nov}","${dec}"};
+      it.printf(160, 28, id(my_font5), light_blue, TextAlign::CENTER, "%s %d %s", days[id(ha_time).now().day_of_week - 1], id(ha_time).now().day_of_month, months[id(ha_time).now().month - 1]);
+      if(id(time_display_format).state == "24 Hr") {
+        it.strftime(160, 88, id(my_font82), TextAlign::CENTER, "%H:%M", id(ha_time).now());
+      } else {
+        it.strftime(160, 88, id(my_font2), TextAlign::CENTER, "%l:%M%p", id(ha_time).now());
+      }
+      
+  - id: ota_page ##### firmware uploading page #####
+    lambda: |-
+      it.fill(Color::BLACK);
+      it.printf(160, 60, id(icon_font_80), red, TextAlign::CENTER, "\U000F08D6");  
+      it.printf((it.get_width() / 2), (it.get_height() / 2), id(my_font3), red, TextAlign::CENTER, "FIRMWARE UPDATING");
+      it.printf(160,190, id(my_font3), red, TextAlign::CENTER, "won't be long....");
+      
+
+      
+  - id: device_set_page ##### Device settings page #####
+    lambda: |-
+      it.fill(id(black));
+      if(id(api_connection) == true) {
+              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
+      } else {
+              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
+      }
+      if(id(wifi_connection) == true) {
+              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
+      } else {
+              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
+      }
+      if(id(time_remaining_0).state == "0:00:00"){
+      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
+      } else {
+      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
+      }
+      if(id(mute_switch).state) {
+              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
+      } else {
+              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
+      }
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
+      }          
+      it.printf(15, 75, id(my_font5), light_blue, "Ext media player"); 
+      if(id(output_audio).state) {
+              it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
+      } else {   
+              it.printf(255, 60, id(icon_font_60), blue_drk, "\U000F0A19");
+      }
+      it.printf(5, 190, id(icon_font_35), light_blue, "\U000F0B28");
+      it.printf(15, 135, id(my_font5), light_blue, "Brightness");          
+      it.printf(238, 148, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);  
+      it.printf(160, 125, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
+      it.printf(315, 125, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");           
+      it.rectangle(215 , 125 , 46 , 40 , light_blue);
+      it.printf(65, 180, id(my_font5), light_blue, "Time Format:");
+      it.printf(210, 180, id(my_font5), lime, "%s", id(time_display_format).state.c_str());
+
+  - id: timeout_settings_page ##### Timeout Settings page #####
+    lambda: |-
+      it.fill(id(black));
+      //it.printf(160, 50, id(icon_font_35), light_blue, TextAlign::CENTER, "\U000F0150"); 
+      it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Screen Settings");  
+      it.printf(160, 60, id(my_font5), light_blue, TextAlign::CENTER, "Screen Saver"); 
+      it.printf(50, 80, id(my_font), light_blue, "Delay secs");
+      it.printf(185, 80, id(my_font), light_blue, "Dim Brightness");
+      it.printf(105, 100, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
+      it.printf(65, 100, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");          
+      it.rectangle(65 , 105 , 40 , 40 , lime);
+      it.printf(85, 125, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_saver_delay).state);
+      it.printf(20, 160, id(my_font), light_blue, "Screen off delay"); 
+      it.printf(105, 180, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
+      it.printf(65, 180, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");          
+      it.rectangle(65 , 180 , 40 , 40 , lime);
+      it.printf(85, 200, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_saver_blank_delay).state);
+      it.printf(255, 100, id(icon_font_35), pink, TextAlign::LEFT, "\U000F0B2C");    
+      it.printf(215, 100, id(icon_font_35), pink, TextAlign::RIGHT, "\U000F0B26");          
+      it.rectangle(215 , 105 , 40 , 40 , pink);
+      it.printf(235, 125, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_saver_brightness).state);
+
+  - id: time_remaining_page ##### timer countdown page #####
+    lambda: |-
+      it.fill(id(black));
+      it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Active Timers");
+      it.printf(160, 70, id(icon_font_80), light_blue, TextAlign::CENTER, "\U000F0150"); 
+      it.printf(160, 155, id(my_font6), light_blue, TextAlign::CENTER, "%s", id(time_remaining_0).state.c_str()); 
+      
+
+  - id: alarm_page   #### alarm page #####
+    lambda: |-
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(10, 10, id(icon_font_180), red, "\U000F099E");
+      it.printf(40, 200, id(my_font3), red, "Disarmed");
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(10, 10, id(icon_font_180), amber, "\U000F0565");
+      it.printf(40, 200, id(my_font3), amber, "Arming");
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(10, 10, id(icon_font_180), green, "\U000F068A");
+      it.printf(60, 200, id(my_font3), green, "Armed");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(10, 10, id(icon_font_180), green, "\U000F099D");
+      it.printf(60, 200, id(my_font3), green, "Armed");
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(10, 10, id(icon_font_180), green, "\U000F1828");
+      it.printf(60, 200, id(my_font3), green, "Armed");
+      }
+      if(id(alarm_status).state == "armed_home") {
+      it.printf(225, 5, id(icon_font_60), green, "\U000F068A");
+      it.printf(233, 60, id(my_font18), light_blue, "Home");
+      } else {
+      it.printf(225, 5, id(icon_font_60), blue_drk, "\U000F068A");
+      it.printf(233, 60, id(my_font18), light_blue, "Home");
+      }
+      if(id(alarm_status).state == "armed_away") {
+      it.printf(225, 80, id(icon_font_60), green, "\U000F099D");
+      it.printf(233, 135, id(my_font18), light_blue, "Away");
+      } else {          
+      it.printf(225, 80, id(icon_font_60), blue_drk, "\U000F099D");
+      it.printf(233, 135, id(my_font18), light_blue, "Away");
+      }
+      if(id(alarm_status).state == "armed_night") {
+      it.printf(225, 155, id(icon_font_60), green, "\U000F1828");         
+      it.printf(228, 215, id(my_font18), light_blue, "Night");
+      } else {
+      it.printf(225, 155, id(icon_font_60), blue_drk, "\U000F1828");         
+      it.printf(228, 215, id(my_font18), light_blue, "Night");
+      }
+  - id: alarm_home_activate_page ##### alarm  home activation page #####
+    lambda: |-
+      auto pin_state = id(current_pin).c_str();
+      it.print(310, 80, id(my_font3), TextAlign::RIGHT, pin_state);
+      // loop for numbers 1 - 9
+      for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+      int number = i * 3 + j + 1;
+      int x_position = 15 + j * 56;  // Ajustement de la position en X
+      int y_position = 15 + i * 56;  // Ajustement de la position en Y
+      it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
+      char num_str[2];
+      snprintf(num_str, sizeof(num_str), "%d", number);
+      it.print(x_position + 24, y_position + 24, id(my_font3), TextAlign::CENTER, num_str);  // Centrage du chiffre
+      }
+        }
+      it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
+      it.print(95, 207, id(my_font3), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
+      //it.filled_rectangle(198, 110, 108, 50, green);
+      if(id(alarm_status).state == "disarmed"){
+      it.filled_rectangle(198, 110, 108, 50, red);
+      it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Arm");
+      } else if(id(alarm_status).state == "armed_home"){
+      it.filled_rectangle(198, 110, 108, 50, green); 
+      it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Disarm");
+      }                 
+      it.filled_rectangle(198, 170, 108, 50, blue_drk);
+      it.print(255, 195, id(my_font3), white, TextAlign::CENTER, "Clear");
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(255, 30, id(icon_font_35), red, TextAlign::CENTER, "\U000F068A");
+      it.printf(255, 70, id(my_font3), red, TextAlign::CENTER, "Disarmed");
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(255, 30, id(icon_font_35), amber, TextAlign::CENTER, "\U000F0565");
+      it.printf(255, 70, id(my_font3), amber, TextAlign::CENTER, "Arming");
+      } else if(id(alarm_status).state == "armed_home") {
+      it.printf(255, 30, id(icon_font_35), green, TextAlign::CENTER, "\U000F068A");
+      it.printf(255, 70, id(my_font3), green, TextAlign::CENTER, "Armed");
+      }         
+  - id: alarm_away_activate_page ##### alarm away activation page #####
+    lambda: |-
+      auto pin_state = id(current_pin).c_str();
+      it.print(310, 80, id(my_font3), TextAlign::RIGHT, pin_state);
+      // loop for numbers 1 - 9
+      for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+      int number = i * 3 + j + 1;
+      int x_position = 15 + j * 56;  // Ajustement de la position en X
+      int y_position = 15 + i * 56;  // Ajustement de la position en Y
+      it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
+      char num_str[2];
+      snprintf(num_str, sizeof(num_str), "%d", number);
+      it.print(x_position + 24, y_position + 24, id(my_font3), TextAlign::CENTER, num_str);  // Centrage du chiffre
+      }
+        }
+      it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
+      it.print(95, 207, id(my_font3), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
+      if(id(alarm_status).state == "disarmed"){
+      it.filled_rectangle(198, 110, 108, 50, red);
+      it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Arm");
+      } else if(id(alarm_status).state == "armed_away"){
+      it.filled_rectangle(198, 110, 108, 50, green); 
+      it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Disarm");
+      }
+      it.filled_rectangle(198, 170, 108, 50, blue_drk);
+      it.print(255, 195, id(my_font3), white, TextAlign::CENTER, "Clear");
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(255, 30, id(icon_font_35), red, TextAlign::CENTER, "\U000F099D");
+      it.printf(255, 70, id(my_font3), red, TextAlign::CENTER, "Disarmed");
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(255, 30, id(icon_font_35), amber, TextAlign::CENTER, "\U000F0565");
+      it.printf(255, 70, id(my_font3), amber, TextAlign::CENTER, "Arming");
+      } else if(id(alarm_status).state == "armed_away") {
+      it.printf(255, 30, id(icon_font_35), green, TextAlign::CENTER, "\U000F099D");
+      it.printf(255, 70, id(my_font3), green, TextAlign::CENTER, "Armed");
+      }  
+  - id: alarm_night_activate_page ##### alarm night activation page #####
+    lambda: |-
+      auto pin_state = id(current_pin).c_str();
+      it.print(310, 80, id(my_font3), TextAlign::RIGHT, pin_state);
+      // loop for numbers 1 - 9
+      for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+      int number = i * 3 + j + 1;
+      int x_position = 15 + j * 56;  // Ajustement de la position en X
+      int y_position = 15 + i * 56;  // Ajustement de la position en Y
+      it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
+      char num_str[2];
+      snprintf(num_str, sizeof(num_str), "%d", number);
+      it.print(x_position + 24, y_position + 24, id(my_font3), TextAlign::CENTER, num_str);  // Centrage du chiffre
+      }
+        }
+      it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
+      it.print(95, 207, id(my_font3), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
+      if(id(alarm_status).state == "disarmed"){
+      it.filled_rectangle(198, 110, 108, 50, red);
+      it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Arm");
+      } else if(id(alarm_status).state == "armed_night"){
+      it.filled_rectangle(198, 110, 108, 50, green); 
+      it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Disarm");
+      }
+      it.filled_rectangle(198, 170, 108, 50, blue_drk);
+      it.print(255, 195, id(my_font3), white, TextAlign::CENTER, "Clear");
+      if(id(alarm_status).state == "disarmed") {
+      it.printf(255, 30, id(icon_font_35), red, TextAlign::CENTER, "\U000F1828");
+      it.printf(255, 70, id(my_font3), red, TextAlign::CENTER, "Disarmed");
+      } else if(id(alarm_status).state == "arming") {
+      it.printf(255, 30, id(icon_font_35), amber, TextAlign::CENTER, "\U000F0565");
+      it.printf(255, 70, id(my_font3), amber, TextAlign::CENTER, "Arming");
+      } else if(id(alarm_status).state == "armed_night") {
+      it.printf(255, 30, id(icon_font_35), green, TextAlign::CENTER, "\U000F1828");
+      it.printf(255, 70, id(my_font3), green, TextAlign::CENTER, "Armed");
+      }            
+
+#yyyyyyy: !? ($_.page_lambda)({buttons => ["status_bar_wifi_connection"]})
+#xxxxxxx: !? ($_.page_lambda)({buttons => ["status_bar_wifi_connection"]})
 
 display:
   - platform: ili9xxx
@@ -1695,582 +2252,9 @@ display:
     ################ the colours and mdi icons are defined above under font: and Color: ##############
     ################ they are then referenced in the config below.                      ##############
     ##################################################################################################
-    pages:
-      - id: idle_page ##### home page ######
-        lambda: !? $_.idle_page_lambda.join('\n')
-
-      - id: template_page ##### template page ##]##
-        lambda: !? $_.template_page_lambda.join('\n')
-          
-      - id: info_page ##### info page #####
-        lambda: !? $_.info_page_lambda.join('\n')
-
-      - id: ss_set_page ##### screen saver settings page #####
-        lambda: |-
-          it.fill(id(black));
-          it.printf(160, 70, id(icon_font_80), light_blue, TextAlign::CENTER, "\U000F08D6");  
-          it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Screensaver Settings");
-          it.printf(250, 115, id(my_font5), light_blue, TextAlign::RIGHT, "Timeout Settings :");
-          it.printf(255, 95, id(icon_font_35), lime, "\U000F08D6");
-          it.printf(250, 145, id(my_font5), light_blue, TextAlign::RIGHT, "Enable screensaver :");
-          if(id(s_saver).state) {
-                 it.printf(255, 135, id(icon_font_35), lime, "\U000F0521");
-          } else {   
-                 it.printf(255, 135, id(icon_font_35), blue_drk, "\U000F0A19");
-          } 
-          it.printf(250, 205, id(my_font5), light_blue, TextAlign::RIGHT, "Timeout to blank :");          
-          if(id(s_saver_mode).state) {
-                 it.printf(255, 195, id(icon_font_35), lime, "\U000F0521");
-          } else {   
-                 it.printf(255, 195, id(icon_font_35), blue_drk, "\U000F0A19");
-          }         
-          
-      - id: ww_set_page ##### voice settings page #####
-        lambda: |-
-          it.fill(id(black));
-          it.printf(160, 50, id(icon_font_35), light_blue, TextAlign::CENTER, "\U000F08D6");  
-          it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Voice Settings");
-          it.printf(155, 85, id(my_font5), light_blue, TextAlign::CENTER, "tap to change");
-          it.printf(135, 115, id(my_font5), light_blue, TextAlign::RIGHT, "WakeWord :");
-          it.printf(310, 115, id(my_font5), lime, TextAlign::RIGHT, "%s", id(wakeword_location).state.c_str());
-          it.printf(250, 145, id(my_font5), light_blue, TextAlign::RIGHT, "Mute responses :"); 
-          if(id(mute_response_switch).state) {
-                 it.printf(255, 135, id(icon_font_35), lime, "\U000F0521");
-          } else {   
-                 it.printf(255, 135, id(icon_font_35), blue_drk, "\U000F0A19");
-          }          
-          it.printf(250, 175, id(my_font5), light_blue, TextAlign::RIGHT, "Wake up sound :");          
-          if(id(wake_sound).state) {
-                 it.printf(255, 165, id(icon_font_35), lime, "\U000F0521");
-          } else {   
-                 it.printf(255, 165, id(icon_font_35), blue_drk, "\U000F0A19");
-          } 
-          it.printf(250, 205, id(my_font5), light_blue, TextAlign::RIGHT, "Show Conversation :");          
-          if(id(display_conversation).state) {
-                 it.printf(255, 195, id(icon_font_35), lime, "\U000F0521");
-          } else {   
-                 it.printf(255, 195, id(icon_font_35), blue_drk, "\U000F0A19");
-          }           
-         
-      - id: climate_page ##### climate page #####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }  
-          it.printf(20, 75, id(icon_font_80), light_blue,"\U000F050F");
-          it.printf(120, 75, id(icon_font_80), light_blue,"\U000F050F");
-          it.printf(220, 75, id(icon_font_80), light_blue, "\U000F050F");
-          it.printf(20, 155, id(icon_font_80), light_blue,"\U000F050F");
-          it.printf(120, 155, id(icon_font_80), light_blue,"\U000F050F");
-          it.printf(220, 155, id(icon_font_80), light_blue, "\U000F050F");
-
-      - id: lights_page ##### lights page ####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }  
-          it.printf(20, 75, id(icon_font_80), light_blue,"\U000F0335");
-          it.printf(120, 75, id(icon_font_80), light_blue,"\U000F0335");
-          it.printf(220, 75, id(icon_font_80), light_blue, "\U000F0335");
-          it.printf(20, 155, id(icon_font_80), light_blue,"\U000F0335");
-          it.printf(120, 155, id(icon_font_80), light_blue,"\U000F0335");
-          it.printf(220, 155, id(icon_font_80), light_blue, "\U000F0335");
-
-      - id: media_page ##### media player page #####
-        lambda: |-  
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }  
-          if(id(media_state) == true) {
-                 it.printf(160, 80, id(my_font5), lime, TextAlign::CENTER, "Playing");
-          } else {
-                 it.printf(160, 80, id(my_font5), light_blue, TextAlign::CENTER, "Nothing Playing");
-          }
-          it.printf(20, 100, id(icon_font_80), blue,"\U000F075E");
-          it.printf(120, 100, id(icon_font_80), blue,"\U000F040E");
-          it.printf(220, 100, id(icon_font_80), blue,"\U000F075D");
-          if(id(media_mute).state) {          
-                  it.printf(120, 165, id(icon_font_80), red,"\U000F0581");
-          } else {        
-                  it.printf(120, 165, id(icon_font_80), lime,"\U000F057E");
-          }
-      - id: ext_media_page ##### media player page #####
-        lambda: |-  
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }  
-          it.printf(160, 80, id(my_font5), lime, TextAlign::CENTER, id(ha_media_status).state.c_str());
-          it.printf(20, 100, id(icon_font_80), blue,"\U000F04AE");
-          it.printf(120, 100, id(icon_font_80), blue,"\U000F040E");
-          it.printf(220, 100, id(icon_font_80), blue,"\U000F04AD");
-          if(id(ext_media_mute).state) {          
-                  it.printf(120, 165, id(icon_font_80), red,"\U000F0581");
-          } else {        
-                  it.printf(120, 165, id(icon_font_80), lime,"\U000F057E");
-          }
-          it.printf(20, 165, id(icon_font_80), blue,"\U000F075E");
-          it.printf(220, 165, id(icon_font_80), blue,"\U000F075D");
-          
-      - id: scenes_page ##### scenes page #####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }    
-          it.printf(20, 75, id(icon_font_80), light_blue,"\U000F0FCE");
-          it.printf(120, 75, id(icon_font_80), light_blue,"\U000F0FCE");
-          it.printf(220, 75, id(icon_font_80), light_blue, "\U000F0FCE");
-          it.printf(20, 155, id(icon_font_80), light_blue,"\U000F0FCE");
-          it.printf(120, 155, id(icon_font_80), light_blue,"\U000F0FCE");
-          it.printf(220, 155, id(icon_font_80), light_blue, "\U000F0FCE");
+    pages: !? $_.static_pages.concat($_.rendered_pages[0])
 
 
-      - id: loading_page ### loading page #####
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(loading_img), ImageAlign::CENTER);
-
-      - id: listening_page
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(listening_img), ImageAlign::CENTER);
-      
-      - id: thinking_page
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(thinking_img), ImageAlign::CENTER);
-          if (id(display_conversation).state) {
-            it.filled_rectangle(0 , 0 , 320 , 30 , Color::WHITE );
-            it.printf(10, 10, id(my_font16), Color::BLACK, "%s", id(text_request).state.c_str());
-          }          
-      - id: replying_page
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(replying_img), ImageAlign::CENTER);
-          if (id(display_conversation).state) {
-            it.filled_rectangle(0 , 0 , 320 , 30 , Color::WHITE );
-            it.filled_rectangle(0 , 210 , 320 , 30 , Color::WHITE );
-            it.printf(10, 10, id(my_font16), Color::BLACK, "%s", id(text_request).state.c_str());
-            it.printf(10, 220, id(my_font16), Color::BLACK, "%s", id(text_response).state.c_str());
-          }
-      - id: error_page
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(error_img), ImageAlign::CENTER);
-          
-      - id: timer_finished_page
-        lambda: |-
-          it.fill(id(black));
-          it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Timer Finished");
-          it.printf(160, 120, id(icon_font_180), light_blue, TextAlign::CENTER, "\U000F009E");
-          it.printf(160, 215, id(my_font5), light_blue, TextAlign::CENTER, "tap screen to dismiss");
-
-      - id: muted_page
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.printf(160, 120, id(my_font4), yellow, TextAlign::CENTER, "Mic & Speaker - Muted");
-
-      - id: saver_page ##### screen saver display page #####
-        lambda: |-
-          it.fill(id(black));
-           
-          const char *days[] {"${sunday}","${monday}","${tuesday}","${wednesday}","${thursday}","${friday}","${saturday}"};
-          const char *months[] {"${jan}","${feb}","${mar}","${apr}","${may}","${jun}","${jul}","${aug}","${sept}","${oct}","${nov}","${dec}"};
-          it.printf(160, 28, id(my_font5), light_blue, TextAlign::CENTER, "%s %d %s", days[id(ha_time).now().day_of_week - 1], id(ha_time).now().day_of_month, months[id(ha_time).now().month - 1]);
-          if(id(time_display_format).state == "24 Hr") {
-            it.strftime(160, 88, id(my_font82), TextAlign::CENTER, "%H:%M", id(ha_time).now());
-          } else {
-            it.strftime(160, 88, id(my_font2), TextAlign::CENTER, "%l:%M%p", id(ha_time).now());
-          }
-         
-      - id: ota_page ##### firmware uploading page #####
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.printf(160, 60, id(icon_font_80), red, TextAlign::CENTER, "\U000F08D6");  
-          it.printf((it.get_width() / 2), (it.get_height() / 2), id(my_font3), red, TextAlign::CENTER, "FIRMWARE UPDATING");
-          it.printf(160,190, id(my_font3), red, TextAlign::CENTER, "won't be long....");
-          
-      - id: settings_page ##### settings parent page #####
-        lambda: !? $_.settings_page_lambda.join('\n')
-
-          
-      - id: device_set_page ##### Device settings page #####
-        lambda: |-
-          it.fill(id(black));
-          if(id(api_connection) == true) {
-                  it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-          } else {
-                  it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-          }
-          if(id(wifi_connection) == true) {
-                  it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-          } else {
-                  it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-          }
-          if(id(time_remaining_0).state == "0:00:00"){
-          it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-          } else {
-          it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-          }
-          if(id(mute_switch).state) {
-                 it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-          } else {
-                 it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-          }
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-          }          
-          it.printf(15, 75, id(my_font5), light_blue, "Ext media player"); 
-          if(id(output_audio).state) {
-                 it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
-          } else {   
-                 it.printf(255, 60, id(icon_font_60), blue_drk, "\U000F0A19");
-          }
-          it.printf(5, 190, id(icon_font_35), light_blue, "\U000F0B28");
-          it.printf(15, 135, id(my_font5), light_blue, "Brightness");          
-          it.printf(238, 148, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);  
-          it.printf(160, 125, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
-          it.printf(315, 125, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");           
-          it.rectangle(215 , 125 , 46 , 40 , light_blue);
-          it.printf(65, 180, id(my_font5), light_blue, "Time Format:");
-          it.printf(210, 180, id(my_font5), lime, "%s", id(time_display_format).state.c_str());
-
-      - id: timeout_settings_page ##### Timeout Settings page #####
-        lambda: |-
-          it.fill(id(black));
-          //it.printf(160, 50, id(icon_font_35), light_blue, TextAlign::CENTER, "\U000F0150"); 
-          it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Screen Settings");  
-          it.printf(160, 60, id(my_font5), light_blue, TextAlign::CENTER, "Screen Saver"); 
-          it.printf(50, 80, id(my_font), light_blue, "Delay secs");
-          it.printf(185, 80, id(my_font), light_blue, "Dim Brightness");
-          it.printf(105, 100, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
-          it.printf(65, 100, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");          
-          it.rectangle(65 , 105 , 40 , 40 , lime);
-          it.printf(85, 125, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_saver_delay).state);
-          it.printf(20, 160, id(my_font), light_blue, "Screen off delay"); 
-          it.printf(105, 180, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
-          it.printf(65, 180, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");          
-          it.rectangle(65 , 180 , 40 , 40 , lime);
-          it.printf(85, 200, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_saver_blank_delay).state);
-          it.printf(255, 100, id(icon_font_35), pink, TextAlign::LEFT, "\U000F0B2C");    
-          it.printf(215, 100, id(icon_font_35), pink, TextAlign::RIGHT, "\U000F0B26");          
-          it.rectangle(215 , 105 , 40 , 40 , pink);
-          it.printf(235, 125, id(my_font5), light_blue, TextAlign::CENTER, "%.f", id(s_saver_brightness).state);
-
-      - id: time_remaining_page ##### timer countdown page #####
-        lambda: |-
-          it.fill(id(black));
-          it.printf(160, 20, id(my_font5), light_blue, TextAlign::CENTER, "Active Timers");
-          it.printf(160, 70, id(icon_font_80), light_blue, TextAlign::CENTER, "\U000F0150"); 
-          it.printf(160, 155, id(my_font6), light_blue, TextAlign::CENTER, "%s", id(time_remaining_0).state.c_str()); 
-          
-      - id: wifi_page ##### wifi info page #####
-        lambda: !? $_.wifi_page_lambda.join('\n')
-
-
-      - id: alarm_page   #### alarm page #####
-        lambda: |-
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(10, 10, id(icon_font_180), red, "\U000F099E");
-          it.printf(40, 200, id(my_font3), red, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(10, 10, id(icon_font_180), amber, "\U000F0565");
-          it.printf(40, 200, id(my_font3), amber, "Arming");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(10, 10, id(icon_font_180), green, "\U000F068A");
-          it.printf(60, 200, id(my_font3), green, "Armed");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(10, 10, id(icon_font_180), green, "\U000F099D");
-          it.printf(60, 200, id(my_font3), green, "Armed");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(10, 10, id(icon_font_180), green, "\U000F1828");
-          it.printf(60, 200, id(my_font3), green, "Armed");
-          }
-          if(id(alarm_status).state == "armed_home") {
-          it.printf(225, 5, id(icon_font_60), green, "\U000F068A");
-          it.printf(233, 60, id(my_font18), light_blue, "Home");
-          } else {
-          it.printf(225, 5, id(icon_font_60), blue_drk, "\U000F068A");
-          it.printf(233, 60, id(my_font18), light_blue, "Home");
-          }
-          if(id(alarm_status).state == "armed_away") {
-          it.printf(225, 80, id(icon_font_60), green, "\U000F099D");
-          it.printf(233, 135, id(my_font18), light_blue, "Away");
-          } else {          
-          it.printf(225, 80, id(icon_font_60), blue_drk, "\U000F099D");
-          it.printf(233, 135, id(my_font18), light_blue, "Away");
-          }
-          if(id(alarm_status).state == "armed_night") {
-          it.printf(225, 155, id(icon_font_60), green, "\U000F1828");         
-          it.printf(228, 215, id(my_font18), light_blue, "Night");
-          } else {
-          it.printf(225, 155, id(icon_font_60), blue_drk, "\U000F1828");         
-          it.printf(228, 215, id(my_font18), light_blue, "Night");
-          }
-      - id: alarm_home_activate_page ##### alarm  home activation page #####
-        lambda: |-
-          auto pin_state = id(current_pin).c_str();
-          it.print(310, 80, id(my_font3), TextAlign::RIGHT, pin_state);
-          // loop for numbers 1 - 9
-          for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-          int number = i * 3 + j + 1;
-          int x_position = 15 + j * 56;  // Ajustement de la position en X
-          int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
-          char num_str[2];
-          snprintf(num_str, sizeof(num_str), "%d", number);
-          it.print(x_position + 24, y_position + 24, id(my_font3), TextAlign::CENTER, num_str);  // Centrage du chiffre
-          }
-           }
-          it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
-          it.print(95, 207, id(my_font3), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
-          //it.filled_rectangle(198, 110, 108, 50, green);
-          if(id(alarm_status).state == "disarmed"){
-          it.filled_rectangle(198, 110, 108, 50, red);
-          it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Arm");
-          } else if(id(alarm_status).state == "armed_home"){
-          it.filled_rectangle(198, 110, 108, 50, green); 
-          it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Disarm");
-          }                 
-          it.filled_rectangle(198, 170, 108, 50, blue_drk);
-          it.print(255, 195, id(my_font3), white, TextAlign::CENTER, "Clear");
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(255, 30, id(icon_font_35), red, TextAlign::CENTER, "\U000F068A");
-          it.printf(255, 70, id(my_font3), red, TextAlign::CENTER, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(255, 30, id(icon_font_35), amber, TextAlign::CENTER, "\U000F0565");
-          it.printf(255, 70, id(my_font3), amber, TextAlign::CENTER, "Arming");
-          } else if(id(alarm_status).state == "armed_home") {
-          it.printf(255, 30, id(icon_font_35), green, TextAlign::CENTER, "\U000F068A");
-          it.printf(255, 70, id(my_font3), green, TextAlign::CENTER, "Armed");
-          }         
-      - id: alarm_away_activate_page ##### alarm away activation page #####
-        lambda: |-
-          auto pin_state = id(current_pin).c_str();
-          it.print(310, 80, id(my_font3), TextAlign::RIGHT, pin_state);
-          // loop for numbers 1 - 9
-          for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-          int number = i * 3 + j + 1;
-          int x_position = 15 + j * 56;  // Ajustement de la position en X
-          int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
-          char num_str[2];
-          snprintf(num_str, sizeof(num_str), "%d", number);
-          it.print(x_position + 24, y_position + 24, id(my_font3), TextAlign::CENTER, num_str);  // Centrage du chiffre
-          }
-           }
-          it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
-          it.print(95, 207, id(my_font3), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
-          if(id(alarm_status).state == "disarmed"){
-          it.filled_rectangle(198, 110, 108, 50, red);
-          it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Arm");
-          } else if(id(alarm_status).state == "armed_away"){
-          it.filled_rectangle(198, 110, 108, 50, green); 
-          it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Disarm");
-          }
-          it.filled_rectangle(198, 170, 108, 50, blue_drk);
-          it.print(255, 195, id(my_font3), white, TextAlign::CENTER, "Clear");
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(255, 30, id(icon_font_35), red, TextAlign::CENTER, "\U000F099D");
-          it.printf(255, 70, id(my_font3), red, TextAlign::CENTER, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(255, 30, id(icon_font_35), amber, TextAlign::CENTER, "\U000F0565");
-          it.printf(255, 70, id(my_font3), amber, TextAlign::CENTER, "Arming");
-          } else if(id(alarm_status).state == "armed_away") {
-          it.printf(255, 30, id(icon_font_35), green, TextAlign::CENTER, "\U000F099D");
-          it.printf(255, 70, id(my_font3), green, TextAlign::CENTER, "Armed");
-          }  
-      - id: alarm_night_activate_page ##### alarm night activation page #####
-        lambda: |-
-          auto pin_state = id(current_pin).c_str();
-          it.print(310, 80, id(my_font3), TextAlign::RIGHT, pin_state);
-          // loop for numbers 1 - 9
-          for (int i = 0; i < 3; i++) {
-          for (int j = 0; j < 3; j++) {
-          int number = i * 3 + j + 1;
-          int x_position = 15 + j * 56;  // Ajustement de la position en X
-          int y_position = 15 + i * 56;  // Ajustement de la position en Y
-          it.rectangle(x_position, y_position, 48, 48, light_blue);  // Taille du rectangle ajustée
-          char num_str[2];
-          snprintf(num_str, sizeof(num_str), "%d", number);
-          it.print(x_position + 24, y_position + 24, id(my_font3), TextAlign::CENTER, num_str);  // Centrage du chiffre
-          }
-           }
-          it.rectangle(71, 183, 48, 48, light_blue);  // Position et taille du rectangle ajustées
-          it.print(95, 207, id(my_font3), TextAlign::CENTER, "0");  // Centrage du chiffre "0"
-          if(id(alarm_status).state == "disarmed"){
-          it.filled_rectangle(198, 110, 108, 50, red);
-          it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Arm");
-          } else if(id(alarm_status).state == "armed_night"){
-          it.filled_rectangle(198, 110, 108, 50, green); 
-          it.print(255, 135, id(my_font3), white, TextAlign::CENTER, "Disarm");
-          }
-          it.filled_rectangle(198, 170, 108, 50, blue_drk);
-          it.print(255, 195, id(my_font3), white, TextAlign::CENTER, "Clear");
-          if(id(alarm_status).state == "disarmed") {
-          it.printf(255, 30, id(icon_font_35), red, TextAlign::CENTER, "\U000F1828");
-          it.printf(255, 70, id(my_font3), red, TextAlign::CENTER, "Disarmed");
-          } else if(id(alarm_status).state == "arming") {
-          it.printf(255, 30, id(icon_font_35), amber, TextAlign::CENTER, "\U000F0565");
-          it.printf(255, 70, id(my_font3), amber, TextAlign::CENTER, "Arming");
-          } else if(id(alarm_status).state == "armed_night") {
-          it.printf(255, 30, id(icon_font_35), green, TextAlign::CENTER, "\U000F1828");
-          it.printf(255, 70, id(my_font3), green, TextAlign::CENTER, "Armed");
-          }            
 i2c:
   - id: bus_a
     sda: GPIO08
@@ -2381,30 +2365,30 @@ binary_sensor:
   #           - component.update: s3_box_lcd
 
 
-  - !for .buttons.where($.containsKey("x")): !()
-    - platform: touchscreen
-      pages:
-        !? let(id => $.id) -> $_.touch_pages.where($.buttons.any($ = $id)).id
-      id: !? $.id
-      internal: true
-      x_min: !? $.x
-      x_max: !? $.x + $.w
-      y_min: !? $.y
-      y_max: !? $.y + $.h
-      !if $.containsKey("on_click"):
-        on_click:
-          min_length: 10ms
-          max_length: 500ms
-          then: 
-            !? $.on_click
-      !if $.containsKey("on_press"):
-        on_press:
-          then:
-            !? $.on_press
-      !if $.containsKey("on_release"):
-        on_release:
-          then:
-            !? $.on_release
+  - !for .buttons.where($.containsKey("x")).where(let(id => $.id) -> $_.touch_pages.where($.buttons.any($ = $id)).len()): !()
+      - platform: touchscreen
+        pages:
+          !? let(id => $.id) -> $_.touch_pages.where($.buttons.any($ = $id)).id
+        id: !? $.id
+        internal: true
+        x_min: !? $.x
+        x_max: !? $.x + $.w
+        y_min: !? $.y
+        y_max: !? $.y + $.h
+        !if $.containsKey("on_click"):
+          on_click:
+            min_length: 10ms
+            max_length: 500ms
+            then: 
+              !? $.on_click
+        !if $.containsKey("on_press"):
+          on_press:
+            then:
+              !? $.on_press
+        !if $.containsKey("on_release"):
+          on_release:
+            then:
+              !? $.on_release
                   
   # - platform: touchscreen
   #   pages:
