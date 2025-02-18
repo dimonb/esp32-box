@@ -1371,6 +1371,26 @@ buttons: !-
     draw:
       - !? ($_.draw_icon)({id=>"light_on_button", color=>"yellow", icon=>$_.icon_glyphs.light_on})
 
+  - id: light_control_button
+    x: 120
+    y: 155
+    w: 80
+    h: 80
+    font: icon_font_75
+    on_click:
+      - homeassistant.service:
+          service: light.toggle
+          data:
+            entity_id: light.pw_switch02
+      - delay: 200ms
+      - component.update: s3_box_lcd
+    draw:
+      - "if (id(bedroom_light).state){"
+      - !? ($_.draw_icon)({id=>"light_control_button", color=>"yellow", icon=>$_.icon_glyphs.light_on})
+      - "} else {"
+      - !? ($_.draw_icon)({id=>"light_control_button", color=>"blue", icon=>$_.icon_glyphs.light_on})
+      - "}"
+
   - id: fan_button
     x: 220
     y: 75
@@ -1523,7 +1543,7 @@ touch_pages: !-
       #- light_on_button
       #- fan_button
       - music_button
-      - scene_button
+      - light_control_button
       - current_time
 
   - id: info_page
@@ -2275,6 +2295,9 @@ binary_sensor:
           - display.page.show: idle_page
           - component.update: s3_box_lcd
 
+  - platform: homeassistant
+    id: bedroom_light
+    entity_id: light.pw_switch02
 ##### satus bar buttons #####             
 
 
