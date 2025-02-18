@@ -1635,6 +1635,84 @@ buttons: !-
       - "it.printf(20, 165, id(icon_font_75), blue,\"\\U000F075E\");"
       - "it.printf(220, 165, id(icon_font_75), blue,\"\\U000F075D\");"
 
+  - id: device_set_back
+    x: 5
+    y: 175
+    w: 100
+    h: 65
+    on_click:
+      - display.page.show: settings_page
+      - component.update: s3_box_lcd
+    draw:
+      - !? '"it.printf(5, 190, id(icon_font_35), light_blue, \"" + $_.icon_glyphs.left + "\");"'
+
+  - id: s_default_bright_down
+    x: 280
+    y: 125
+    w: 40
+    h: 40
+    on_press:
+      - lambda: |-
+          int default_bright = id(s_default_brightness).state - 5;
+          if (default_bright < 1) {
+            default_bright = 1;
+          }
+          auto call = id(s_default_brightness).make_call();
+          call.set_value(default_bright);
+          call.perform();
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(15, 135, id(my_font22), light_blue, \"Brightness\");"     #common for both up and down
+      - "it.printf(238, 148, id(my_font22), light_blue, TextAlign::CENTER, \"%.f\", id(s_default_brightness).state);"         
+      - "it.rectangle(215 , 125 , 46 , 40 , light_blue);"
+      - !? '"it.printf(315, 125, id(icon_font_35), lime, TextAlign::RIGHT, \"" + $_.icon_glyphs.down + "\");"'    
+        
+  - id: s_default_bright_up
+    x: 155
+    y: 125
+    w: 40
+    h: 40
+    on_press:
+      - lambda: |-
+            int default_bright = id(s_default_brightness).state + 5;
+            auto call = id(s_default_brightness).make_call();
+            call.set_value(default_bright);
+            call.perform();
+      - component.update: s3_box_lcd
+    draw:
+      - !? '"it.printf(160, 125, id(icon_font_35), lime, TextAlign::LEFT, \"" + $_.icon_glyphs.up + "\");"'    
+
+  - id: ext_media_toggle
+    x: 280
+    y: 80
+    w: 40
+    h: 40
+    on_click:
+      - switch.toggle: output_audio
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(15, 75, id(my_font22), light_blue, \"Ext media player\");" 
+      - "if(id(output_audio).state) {"
+      - !? '"  it.printf(255, 60, id(icon_font_60), lime, \"" + $_.icon_glyphs.toggle_on + "\");"'
+      - "} else {"   
+      - !? '"  it.printf(255, 60, id(icon_font_60), blue_drk, \"" + $_.icon_glyphs.toggle_off + "\");"'
+      - "}"
+
+  - id: chang_display_format
+    x: 200
+    y: 175
+    w: 60
+    h: 35
+    on_click:
+      - select.operation:
+            id: time_format
+            operation: Next
+            cycle: true   
+      - component.update: s3_box_lcd      
+    draw:       
+      - "it.printf(65, 180, id(my_font22), light_blue, \"Time Format:\");"
+      - "it.printf(210, 180, id(my_font22), lime, \"%s\", id(time_display_format).state.c_str());"
+
 touch_pages: !-
   - id: idle_page
     buttons: 
@@ -1739,6 +1817,19 @@ touch_pages: !-
       - status_bar_wifi_connection
       - status_bar_settings_button
       - ext_media_page
+
+  - id: device_set_page 
+    buttons:
+      - status_bar_title
+      - status_bar_mute_switch
+      - status_bar_api_connection
+      - status_bar_wifi_connection
+      - status_bar_settings_button
+      - device_set_back
+      - s_default_bright_down
+      - s_default_bright_up
+      - ext_media_toggle
+      - chang_display_format
       
 rendered_pages: !-
   - !? |
@@ -1993,57 +2084,6 @@ static_pages: !-
       it.printf(160, 60, id(icon_font_75), red, TextAlign::CENTER, "\U000F08D6");  
       it.printf((it.get_width() / 2), (it.get_height() / 2), id(my_font28), red, TextAlign::CENTER, "FIRMWARE UPDATING");
       it.printf(160,190, id(my_font28), red, TextAlign::CENTER, "won't be long....");
-      
-
-      
-  - id: device_set_page ##### Device settings page #####
-    lambda: |-
-      it.fill(id(black));
-      if(id(api_connection) == true) {
-              it.printf(15, 5, id(icon_font_35), blue, "\U000F07D0");      
-      } else {
-              it.printf(15, 5, id(icon_font_35), red, "\U000F087B");
-      }
-      if(id(wifi_connection) == true) {
-              it.printf(80, 5, id(icon_font_35), lime, "\U000F16BD");      
-      } else {
-              it.printf(80, 5, id(icon_font_35), red, "\U000F16BC");
-      }
-      if(id(time_remaining_0).state == "0:00:00"){
-      it.printf(135, 5, id(icon_font_35), red, "\U000F0150");
-      } else {
-      it.printf(135, 5, id(icon_font_35), lime, "\U000F0150");
-      }
-      if(id(mute_switch).state) {
-              it.printf(190, 5, id(icon_font_35), red, "\U000F036D"); 
-      } else {
-              it.printf(190, 5, id(icon_font_35), lime, "\U000F036C"); 
-      }
-      if(id(alarm_status).state == "disarmed") {
-      it.printf(250, 5, id(icon_font_35), red, "\U000F099E"); 
-      } else if(id(alarm_status).state == "arming") {
-      it.printf(250, 5, id(icon_font_35), amber, "\U000F0565"); 
-      } else if(id(alarm_status).state == "armed_home") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F068A");
-      } else if(id(alarm_status).state == "armed_away") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F099D");     
-      } else if(id(alarm_status).state == "armed_night") {
-      it.printf(250, 5, id(icon_font_35), green, "\U000F1828");
-      }          
-      it.printf(15, 75, id(my_font22), light_blue, "Ext media player"); 
-      if(id(output_audio).state) {
-              it.printf(255, 60, id(icon_font_60), lime, "\U000F0521");
-      } else {   
-              it.printf(255, 60, id(icon_font_60), blue_drk, "\U000F0A19");
-      }
-      it.printf(5, 190, id(icon_font_35), light_blue, "\U000F0B28");
-      it.printf(15, 135, id(my_font22), light_blue, "Brightness");          
-      it.printf(238, 148, id(my_font22), light_blue, TextAlign::CENTER, "%.f", id(s_default_brightness).state);  
-      it.printf(160, 125, id(icon_font_35), lime, TextAlign::LEFT, "\U000F0B2C");    
-      it.printf(315, 125, id(icon_font_35), lime, TextAlign::RIGHT, "\U000F0B26");           
-      it.rectangle(215 , 125 , 46 , 40 , light_blue);
-      it.printf(65, 180, id(my_font22), light_blue, "Time Format:");
-      it.printf(210, 180, id(my_font22), lime, "%s", id(time_display_format).state.c_str());
 
   - id: timeout_settings_page ##### Timeout Settings page #####
     lambda: |-
@@ -2411,24 +2451,6 @@ binary_sensor:
   #       - display.page.show: alarm_page
   #       - component.update: s3_box_lcd
 
-##### settings page ####
-
-        
-  - platform: touchscreen
-    pages:
-      - device_set_page
-    id: back_button
-    internal: true
-    x_min: 5
-    x_max: 105
-    y_min: 175
-    y_max: 240
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - display.page.show: settings_page
-        - component.update: s3_box_lcd
 
             
 #### climate page #####
@@ -3181,73 +3203,7 @@ binary_sensor:
             call.set_value(bright);
             call.perform();
         - component.update: s3_box_lcd
-##### device settings page #####        
-  - id: s_default_bright_down
-    page_id: device_set_page
-    platform: touchscreen
-    internal: true
-    x_min: 280
-    x_max: 320
-    y_min: 125
-    y_max: 165
-    on_press:
-      then:
-        - lambda: |-
-            int default_bright = id(s_default_brightness).state - 5;
-            if (default_bright < 1) {
-              default_bright = 1;
-            }
-            auto call = id(s_default_brightness).make_call();
-            call.set_value(default_bright);
-            call.perform();
-        - component.update: s3_box_lcd
-        
-  - id: s_default_bright_up
-    page_id: device_set_page
-    platform: touchscreen
-    internal: true
-    x_min: 155
-    x_max: 195
-    y_min: 125
-    y_max: 165
-    on_press:
-      then:
-        - lambda: |-
-            int default_bright = id(s_default_brightness).state + 5;
-            auto call = id(s_default_brightness).make_call();
-            call.set_value(default_bright);
-            call.perform();
-        - component.update: s3_box_lcd
 
-  - id: ext_media_toggle
-    page_id: device_set_page
-    platform: touchscreen
-    internal: true
-    x_min: 280
-    x_max: 320
-    y_min: 80
-    y_max: 120
-    on_press:
-      then:
-        - switch.toggle: output_audio
-        - component.update: s3_box_lcd
-
-  - platform: touchscreen
-    page_id: device_set_page
-    id: chang_display_format
-    x_min: 200
-    x_max: 260
-    y_min: 175
-    y_max: 210
-    on_click:
-      min_length: 10ms
-      max_length: 500ms
-      then:
-        - select.operation:
-            id: time_format
-            operation: Next
-            cycle: true   
-        - component.update: s3_box_lcd
 
           
 ##### alarm panel buttons #####
