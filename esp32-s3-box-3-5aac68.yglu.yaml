@@ -181,6 +181,51 @@ interval:
   - interval: 30s
     then:
       - component.update: s3_box_lcd
+
+  - interval: 60s
+    then:
+      - lambda: |-
+          auto now = id(ha_time).now();
+
+          // Get sensor strings in ISO8601 (UTC)
+          std::string dawn_str = id(sun_next_dawn).state;
+          std::string dusk_str = id(sun_next_dusk).state;
+
+          // Strip timezone: "YYYY-MM-DDTHH:MM:SS" -> "YYYY-MM-DD HH:MM:SS"
+          if (dawn_str.size() >= 19) { dawn_str = dawn_str.substr(0, 19); dawn_str[10] = ' '; }
+          if (dusk_str.size() >= 19) { dusk_str = dusk_str.substr(0, 19); dusk_str[10] = ' '; }
+
+          ESPTime dawn_utc, dusk_utc;
+          if (!ESPTime::strptime(dawn_str, dawn_utc) || !ESPTime::strptime(dusk_str, dusk_utc)) {
+            ESP_LOGE("auto_brightness", "Failed to parse sun times");
+            return;
+          }
+
+          // Recalculate timestamps assuming parsed fields are in UTC
+          dawn_utc.recalc_timestamp_utc();
+          dusk_utc.recalc_timestamp_utc();
+
+          // Convert UTC to local time
+          ESPTime dawn_local = ESPTime::from_epoch_local(dawn_utc.timestamp);
+          ESPTime dusk_local = ESPTime::from_epoch_local(dusk_utc.timestamp);
+
+          int new_brightness = 100;
+          // Use local dawn/dusk times for comparison
+          if (dusk_local.timestamp < dawn_local.timestamp) {
+            new_brightness = 100;
+          } else {
+            new_brightness = (now.hour >= dusk_local.hour && now.hour < 20) ? 65 : 45;
+          }
+
+          if (new_brightness != static_cast<int>(id(s_default_brightness).state)) {
+            ESP_LOGD("auto_brightness", "Updating brightness from %d to %d",
+                    static_cast<int>(id(s_default_brightness).state), new_brightness);
+            id(s_default_brightness).make_call().set_value(new_brightness).perform();
+            id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
+          }
+
+
+
       
 select:
   - platform: template
@@ -775,6 +820,15 @@ text_sensor:
     on_value:
       - component.update: s3_box_lcd
       
+  - platform: homeassistant
+    name: "Sun next dawn"
+    entity_id: sensor.sun_next_dawn
+    id: sun_next_dawn
+
+  - platform: homeassistant
+    name: "Sun next dusk"
+    entity_id: sensor.sun_next_dusk
+    id: sun_next_dusk
       
 i2s_audio:
   - id: i2s_shared
@@ -2320,7 +2374,7 @@ touchscreen:
     on_touch:
       - lambda: |-
           id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
-          ESP_LOGD("TOUCH", "Touch at x=%i, y=%i", touch.x, touch.y);
+          ESP_LOGD("gt911_touchscreen", "Touch at x=%i, y=%i", touch.x, touch.y);
     on_release:
       - script.execute: saver_enabled 
    
@@ -3164,10 +3218,7 @@ binary_sensor:
             call.set_value(sleep);
             call.perform();
         - component.update: s3_box_lcd
-        
-        
-        
-        
+                
         
   - id: ss_bright_down
     page_id: timeout_settings_page
