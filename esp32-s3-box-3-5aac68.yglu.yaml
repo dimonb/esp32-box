@@ -186,54 +186,55 @@ interval:
   - interval: 60s
     then:
       - lambda: |-
-          auto now = id(ha_time).now();
+          if (id(brightness_auto).state) {
+            auto now = id(ha_time).now();
+            // Get sensor strings in ISO8601 (UTC)
+            std::string dawn_str = id(sun_next_dawn).state;
+            std::string dusk_str = id(sun_next_dusk).state;
 
-          // Get sensor strings in ISO8601 (UTC)
-          std::string dawn_str = id(sun_next_dawn).state;
-          std::string dusk_str = id(sun_next_dusk).state;
+            // Strip timezone: "YYYY-MM-DDTHH:MM:SS" -> "YYYY-MM-DD HH:MM:SS"
+            if (dawn_str.size() >= 19) { dawn_str = dawn_str.substr(0, 19); dawn_str[10] = ' '; }
+            if (dusk_str.size() >= 19) { dusk_str = dusk_str.substr(0, 19); dusk_str[10] = ' '; }
+            ESP_LOGD("auto_brightness", "Dawn: %s, Dusk: %s", dawn_str.c_str(), dusk_str.c_str());
 
-          // Strip timezone: "YYYY-MM-DDTHH:MM:SS" -> "YYYY-MM-DD HH:MM:SS"
-          if (dawn_str.size() >= 19) { dawn_str = dawn_str.substr(0, 19); dawn_str[10] = ' '; }
-          if (dusk_str.size() >= 19) { dusk_str = dusk_str.substr(0, 19); dusk_str[10] = ' '; }
-          ESP_LOGD("auto_brightness", "Dawn: %s, Dusk: %s", dawn_str.c_str(), dusk_str.c_str());
+            ESPTime dawn_utc, dusk_utc;
+            if (!ESPTime::strptime(dawn_str, dawn_utc) || !ESPTime::strptime(dusk_str, dusk_utc)) {
+              ESP_LOGE("auto_brightness", "Failed to parse sun times");
+              return;
+            }
 
-          ESPTime dawn_utc, dusk_utc;
-          if (!ESPTime::strptime(dawn_str, dawn_utc) || !ESPTime::strptime(dusk_str, dusk_utc)) {
-            ESP_LOGE("auto_brightness", "Failed to parse sun times");
-            return;
-          }
+            ESP_LOGD("auto_brightness", "Dawn UTC: %s, Dusk UTC: %s", dawn_utc.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_utc.strftime("%Y-%m-%d %H:%M:%S").c_str());
 
-          ESP_LOGD("auto_brightness", "Dawn UTC: %s, Dusk UTC: %s", dawn_utc.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_utc.strftime("%Y-%m-%d %H:%M:%S").c_str());
+            dawn_utc.day_of_week = 1;  //workaround for bug in ESPTime, which require this field to be filled
+            dusk_utc.day_of_week = 1;
+            dawn_utc.day_of_year = 1;
+            dusk_utc.day_of_year = 1;
 
-          dawn_utc.day_of_week = 1;  //workaround for bug in ESPTime, which require this field to be filled
-          dusk_utc.day_of_week = 1;
-          dawn_utc.day_of_year = 1;
-          dusk_utc.day_of_year = 1;
+            // Recalculate timestamps assuming parsed fields are in UTC
+            dawn_utc.recalc_timestamp_utc(false);
+            dusk_utc.recalc_timestamp_utc(false);
+            ESP_LOGD("auto_brightness", "Dawn UTC timestamp: %ld, Dusk UTC timestamp: %ld", dawn_utc.timestamp, dusk_utc.timestamp);
 
-          // Recalculate timestamps assuming parsed fields are in UTC
-          dawn_utc.recalc_timestamp_utc(false);
-          dusk_utc.recalc_timestamp_utc(false);
-          ESP_LOGD("auto_brightness", "Dawn UTC timestamp: %ld, Dusk UTC timestamp: %ld", dawn_utc.timestamp, dusk_utc.timestamp);
+            // Convert UTC to local time
+            ESPTime dawn_local = ESPTime::from_epoch_local(dawn_utc.timestamp);
+            ESPTime dusk_local = ESPTime::from_epoch_local(dusk_utc.timestamp);
 
-          // Convert UTC to local time
-          ESPTime dawn_local = ESPTime::from_epoch_local(dawn_utc.timestamp);
-          ESPTime dusk_local = ESPTime::from_epoch_local(dusk_utc.timestamp);
+            ESP_LOGD("auto_brightness", "Dawn local: %s, Dusk local: %s", dawn_local.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_local.strftime("%Y-%m-%d %H:%M:%S").c_str());
 
-          ESP_LOGD("auto_brightness", "Dawn local: %s, Dusk local: %s", dawn_local.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_local.strftime("%Y-%m-%d %H:%M:%S").c_str());
+            int new_brightness = 100;
+            // Use local dawn/dusk times for comparison
+            if (dusk_local.timestamp < dawn_local.timestamp) {
+              new_brightness = 100;
+            } else {
+              new_brightness = (now.hour >= dusk_local.hour && now.hour < 20) ? 65 : 45;
+            }
 
-          int new_brightness = 100;
-          // Use local dawn/dusk times for comparison
-          if (dusk_local.timestamp < dawn_local.timestamp) {
-            new_brightness = 100;
-          } else {
-            new_brightness = (now.hour >= dusk_local.hour && now.hour < 20) ? 65 : 45;
-          }
-
-          if (new_brightness != static_cast<int>(id(s_default_brightness).state)) {
-            ESP_LOGI("auto_brightness", "Updating brightness from %d to %d",
-                    static_cast<int>(id(s_default_brightness).state), new_brightness);
-            id(s_default_brightness).make_call().set_value(new_brightness).perform();
-            id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
+            if (new_brightness != static_cast<int>(id(s_default_brightness).state)) {
+              ESP_LOGI("auto_brightness", "Updating brightness from %d to %d",
+                      static_cast<int>(id(s_default_brightness).state), new_brightness);
+              id(s_default_brightness).make_call().set_value(new_brightness).perform();
+              id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
+            }
           }
 
       
@@ -665,6 +666,14 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     
+  - platform: template
+    id: brightness_auto
+    name: Brightness Auto
+    icon: mdi:brightness-auto
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
   - platform: template
     id: ext_media_mute
     icon: 'mdi:volume-off'
@@ -1714,7 +1723,7 @@ buttons: !-
 
   - id: s_default_bright_down
     x: 280
-    y: 125
+    y: 130
     w: 40
     h: 40
     on_press:
@@ -1728,14 +1737,11 @@ buttons: !-
           call.perform();
       - component.update: s3_box_lcd
     draw:
-      - "it.printf(15, 135, id(my_font22), light_blue, \"Brightness\");"     #common for both up and down
-      - "it.printf(238, 148, id(my_font22), light_blue, TextAlign::CENTER, \"%.f\", id(s_default_brightness).state);"         
-      - "it.rectangle(215 , 125 , 46 , 40 , light_blue);"
-      - !? '"it.printf(315, 125, id(icon_font_35), lime, TextAlign::RIGHT, \"" + $_.icon_glyphs.down + "\");"'    
+      - !? '"it.printf(315, 130, id(icon_font_35), lime, TextAlign::RIGHT, \"" + $_.icon_glyphs.down + "\");"'    
         
   - id: s_default_bright_up
-    x: 155
-    y: 125
+    x: 170
+    y: 130
     w: 40
     h: 40
     on_press:
@@ -1746,22 +1752,41 @@ buttons: !-
             call.perform();
       - component.update: s3_box_lcd
     draw:
-      - !? '"it.printf(160, 125, id(icon_font_35), lime, TextAlign::LEFT, \"" + $_.icon_glyphs.up + "\");"'    
+      - "it.printf(15, 135, id(my_font22), light_blue, \"Brightness\");"     #common for both up and down
+      - "it.printf(245, 135, id(my_font22), light_blue, TextAlign::CENTER_HORIZONTAL, \"%.f\", id(s_default_brightness).state);"         
+      - "it.rectangle(223, 132 , 46 , 26 , light_blue);"
+      - !? '"it.printf(175, 130, id(icon_font_35), lime, TextAlign::LEFT, \"" + $_.icon_glyphs.up + "\");"'    
 
   - id: ext_media_toggle
     x: 280
-    y: 80
+    y: 50
     w: 40
-    h: 40
+    h: 30
     on_click:
       - switch.toggle: output_audio
       - component.update: s3_box_lcd
     draw:
-      - "it.printf(15, 75, id(my_font22), light_blue, \"Ext media player\");" 
+      - "it.printf(15, 55, id(my_font22), light_blue, \"Ext media player\");" 
       - "if(id(output_audio).state) {"
-      - !? '"  it.printf(255, 60, id(icon_font_60), lime, \"" + $_.icon_glyphs.toggle_on + "\");"'
+      - !? '"  it.printf(255, 35, id(icon_font_60), lime, \"" + $_.icon_glyphs.toggle_on + "\");"'
       - "} else {"   
-      - !? '"  it.printf(255, 60, id(icon_font_60), blue_drk, \"" + $_.icon_glyphs.toggle_off + "\");"'
+      - !? '"  it.printf(255, 35, id(icon_font_60), blue_drk, \"" + $_.icon_glyphs.toggle_off + "\");"'
+      - "}"
+
+  - id: brightness_auto_toggle
+    x: 280
+    y: 90
+    w: 40
+    h: 30
+    on_click:
+      - switch.toggle: brightness_auto
+      - component.update: s3_box_lcd
+    draw:
+      - "it.printf(15, 95, id(my_font22), light_blue, \"Brightness Auto\");"
+      - "if(id(brightness_auto).state) {"
+      - !? '"  it.printf(255, 75, id(icon_font_60), lime, \"" + $_.icon_glyphs.toggle_on + "\");"'
+      - "} else {"   
+      - !? '"  it.printf(255, 75, id(icon_font_60), blue_drk, \"" + $_.icon_glyphs.toggle_off + "\");"'
       - "}"
 
   - id: chang_display_format
@@ -1895,6 +1920,7 @@ touch_pages: !-
       - s_default_bright_down
       - s_default_bright_up
       - ext_media_toggle
+      - brightness_auto_toggle
       - chang_display_format
       
 rendered_pages: !-
