@@ -132,6 +132,7 @@ logger:
   logs:
     text_sensor: WARN
     component: ERROR
+    auto_brightness: INFO
 
 
 wifi:
@@ -194,6 +195,7 @@ interval:
           // Strip timezone: "YYYY-MM-DDTHH:MM:SS" -> "YYYY-MM-DD HH:MM:SS"
           if (dawn_str.size() >= 19) { dawn_str = dawn_str.substr(0, 19); dawn_str[10] = ' '; }
           if (dusk_str.size() >= 19) { dusk_str = dusk_str.substr(0, 19); dusk_str[10] = ' '; }
+          ESP_LOGD("auto_brightness", "Dawn: %s, Dusk: %s", dawn_str.c_str(), dusk_str.c_str());
 
           ESPTime dawn_utc, dusk_utc;
           if (!ESPTime::strptime(dawn_str, dawn_utc) || !ESPTime::strptime(dusk_str, dusk_utc)) {
@@ -201,13 +203,23 @@ interval:
             return;
           }
 
+          ESP_LOGD("auto_brightness", "Dawn UTC: %s, Dusk UTC: %s", dawn_utc.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_utc.strftime("%Y-%m-%d %H:%M:%S").c_str());
+
+          dawn_utc.day_of_week = 1;  //workaround for bug in ESPTime, which require this field to be filled
+          dusk_utc.day_of_week = 1;
+          dawn_utc.day_of_year = 1;
+          dusk_utc.day_of_year = 1;
+
           // Recalculate timestamps assuming parsed fields are in UTC
-          dawn_utc.recalc_timestamp_utc();
-          dusk_utc.recalc_timestamp_utc();
+          dawn_utc.recalc_timestamp_utc(false);
+          dusk_utc.recalc_timestamp_utc(false);
+          ESP_LOGD("auto_brightness", "Dawn UTC timestamp: %ld, Dusk UTC timestamp: %ld", dawn_utc.timestamp, dusk_utc.timestamp);
 
           // Convert UTC to local time
           ESPTime dawn_local = ESPTime::from_epoch_local(dawn_utc.timestamp);
           ESPTime dusk_local = ESPTime::from_epoch_local(dusk_utc.timestamp);
+
+          ESP_LOGD("auto_brightness", "Dawn local: %s, Dusk local: %s", dawn_local.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_local.strftime("%Y-%m-%d %H:%M:%S").c_str());
 
           int new_brightness = 100;
           // Use local dawn/dusk times for comparison
@@ -218,13 +230,11 @@ interval:
           }
 
           if (new_brightness != static_cast<int>(id(s_default_brightness).state)) {
-            ESP_LOGD("auto_brightness", "Updating brightness from %d to %d",
+            ESP_LOGI("auto_brightness", "Updating brightness from %d to %d",
                     static_cast<int>(id(s_default_brightness).state), new_brightness);
             id(s_default_brightness).make_call().set_value(new_brightness).perform();
             id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
           }
-
-
 
       
 select:
