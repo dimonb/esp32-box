@@ -4,7 +4,7 @@
 
 This is a fully refactored ESPHome firmware for the ESP32-S3-Box3, utilizing **yglu** for templating to eliminate code duplication. All visual controls are now modularly described in a separate section, allowing easier customization and maintenance. This project is based on the original implementation available at [ESP32-S3-Box3-Custom-ESPHome](https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome).
 
-<img src="https://github.com/user-attachments/assets/0b3fa258-6e06-4375-8820-7dff9db609e1" width="320" height="240">
+<img src="https://github.com/user-attachments/assets/32260831-c69a-421e-b8de-562ad6add592" width="320" height="240">
 
 
 ### Key Features
