@@ -1536,8 +1536,8 @@ buttons: !-
       - "  } else {"
       - !? '"    glyph = \"" + $_.icon_glyphs.weather_sunny + "\";"'
       - "  }"
-      - "  it.printf(216, 157, id(icon_font_60), id(white), glyph);"
-      - "  it.printf(271, 207, id(my_font22), id(white), COLOR_OFF, TextAlign::LEFT, \"%.0f°\", id(openweathermap_temperature).state);"
+      - "  it.printf(216, 156, id(icon_font_60), id(white), glyph);"
+      - "  it.printf(271, 206, id(my_font22), id(white), COLOR_OFF, TextAlign::LEFT, \"%.0f°\", id(openweathermap_temperature).state);"
       - "}"
 
   - id: fan_button
