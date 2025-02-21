@@ -7,3 +7,4 @@ secrets.yaml
 *tmp
 esp32-s3-box-3-5aac68.yaml
 *copy*yaml
+*.bin
