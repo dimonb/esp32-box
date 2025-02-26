@@ -30,3 +30,17 @@ logs: $(YML)
 clean: $(YML)
 	rm -rf .esphome/
 
+
+.esphome/test/layout.test.yaml: layout.test.yglu.yaml
+	mkdir -p .esphome/test
+	$(YTE) < layout.test.yglu.yaml > .esphome/test/layout.test.yaml.tmp
+	mv .esphome/test/layout.test.yaml.tmp .esphome/test/layout.test.yaml
+	rm -f .esphome/test/layout.test.yaml.tmp
+
+.esphome/test/secrets.yaml: secrets.yaml
+	mkdir -p .esphome/test
+	cp -p secrets.yaml .esphome/test/secrets.yaml
+
+test: .esphome/test/layout.test.yaml .esphome/test/secrets.yaml
+	$(ESPHOME) compile .esphome/test/layout.test.yaml
+
