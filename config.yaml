@@ -1,0 +1,46 @@
+substitutions:
+  name: esp32-s3-box-3-5aac68
+  friendly_name: ESP32-S3-Box-3
+  
+  external_media_player: spalnia  ##change this to your external media player enity_id: do not include media_player.
+  home_assistant_host: https://hass3.dimonb.com:443 ##change to the full url or IP of your HA server including port
+  tts_voice_speed: "24000" #options #nabu casa "24000" #piper "16000" elevenlabs "44100" must include quotes
+  
+#################### ON DEVICE WAKE WORDS #######################################
+####          all of the below wakewords are installed on the device        #####
+####      you can use any of these without re-compiling - just say them!    #####
+#################################################################################
+# TO REMOVE A WAKE WORD - COMMENT OUT THE CORESPONDING LINE FROM THE CONFIG BELOW - CTRL + F to search for "models" 
+  micro_wake_word_model_1: alexa
+  micro_wake_word_model_2: hey_jarvis
+  micro_wake_word_model_3: okay_nabu 
+  micro_wake_word_model_4: hey_mycroft
+####################################################################
+
+#####  Days and months #####
+## Change the values on the right to match your locale ##
+  monday: Monday
+  tuesday: Tuesday
+  wednesday: Wednesday
+  thursday: Thursday
+  friday: Friday
+  saturday: Saturday
+  sunday: Sunday
+  
+  jan: January
+  feb: February
+  mar: March
+  apr: April
+  may: May
+  jun: June
+  jul: July
+  aug: August
+  sept: September
+  oct: October
+  nov: November
+  dec: December
+#####################################################################
+
+##### DO NOT CHANGE SUBSTITUTIONS BELOW THIS LINE ######
+#####      UNLESS YOU KNOW WHAT YOU ARE DOING     ######  
+  font_glyphs: '&@!"''%()+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyzÀàÁáÂâÃãÄäĀāĂăÅåǺǻẠạĄąÆæǼǽĆćĈĉČčĊċÇçĎďĐđÐðÈèÉéÊêẼẽĚěËëĒēĔĕĖėẸẹĘęĜĝǦǧĞğĠġĢģĤĥĦħıÌìÍíÎîĨĩÏïĪīĬĭİỊịĮįȷĴĵĶķĸĹĺĽľĻļŁłĿŀŃńÑñŇňŅņƝɲŊŋŉÒòÓóÔôÕõÖöŌōŎŏŐőỌọǪǫØøǾǿŒœŔŕŘřŖŗŚśŜŝŠšŞşȘșẞßŤťŢţȚțŦŧÞþÙùÚúÛûŨũÜüŪūŬŭŮůŰűỤụŲųẀẁẂẃŴŵẄẅỲỳÝýŶŷỸỹŸÿȲȳŹźŽžŻżĲĳƏəабвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'  

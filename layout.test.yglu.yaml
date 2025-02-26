@@ -1,0 +1,238 @@
+
+config: !- $import('config.yaml')
+
+sub: !- $_.config.substitutions
+
+substitutions: !? '$_.sub.delete("font_glyphs").mergeWith(dict("font_glyphs" => "&@!\"%(){}+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"))'
+
+
+touch: !- $import('touch.yaml')
+
+add: !-
+  lambda: |
+    id(time_display_format).publish_state("24 Hr");
+    id(temperature_bedroom).publish_state(21.2);
+    id(co2_bedroom).publish_state(1200);
+    id(openweathermap_condition).publish_state("cloudy");
+    id(openweathermap_temperature).publish_state(18.0);
+
+render: !- $_.add.lambda + $_.touch.rendered_pages.select($[0]).where($.id = "idle_page").first().lambda
+
+
+resources: !- $import('resources.yaml')
+#image: !? $_.resources.image
+font: 
+  - !for $_.resources.font: !()
+    - file: !? $.file
+      id: !? $.id
+      size: !? $.size
+      bpp: 1
+      glyphs:
+        !? $.glyphs
+
+color: !? $_.resources.color
+
+hass: !- $import('hass.yaml')
+
+esphome:
+  name: test-esp32-device
+  friendly_name: test-esp32-device
+
+esp32:
+  board: esp32s3box
+  #flash_size: 8MB
+  framework:
+    type: arduino
+
+
+external_components:
+  - source: github://rpatel3001/esphome@es7210
+    components: [ es7210 ]
+
+
+wifi:
+  ssid: "Wokwi-GUEST"
+  ap:
+
+
+ota:
+  - platform: esphome
+api:
+  encryption:
+    key: !secret esphome_api_key
+
+time:
+  - platform: homeassistant
+    id: ha_time
+
+
+logger:
+  # CDC logging is currently not working on the S3
+  # See https://github.com/espressif/esp-idf/commit/9924d9f27192a5fab5f66230c72249ecc6cad34c
+  #hardware_uart: USB_CDC
+  level: VERBOSE
+  logs:
+    esp32_ble: WARN
+    esp32_ble_tracker: WARN
+    ble_dist: WARN
+    sensor: WARN
+    ledc.output: WARN
+    component: WARN
+    ili9xxx: WARN
+    tt21100: WARN
+    touchscreen: WARN
+    wifi: WARN
+    es8311: WARN
+    i2s_audio: VERBOSE
+    voice_assistant: VERBOSE
+    es7210: WARN
+
+
+globals:
+  - id: wifi_connection
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+  - id: api_connection
+    type: bool
+    restore_value: no
+    initial_value: "false" 
+
+
+switch:
+  - platform: template
+    name: Mute
+    id: mute_switch
+    icon: "mdi:microphone-off"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+
+
+output:
+  - platform: ledc
+    pin: GPIO47
+    id: backlight_output
+
+light:
+  - platform: monochromatic
+    id: led
+    name: LCD Backlight
+    entity_category: config
+    output: backlight_output
+    restore_mode: ALWAYS_ON
+    default_transition_length: 50ms
+
+spi:
+  clk_pin: GPIO7
+  mosi_pin: GPIO6
+
+display:
+  - platform: ili9xxx
+    model: S3BOX
+    data_rate: 40MHz
+    cs_pin: 5
+    dc_pin: 4
+    #reset_pin:
+    #  number: 48
+    #  inverted: true
+    update_interval: 5s
+    id: s3_box_lcd
+    #auto_clear_enabled: false
+    invert_colors: false
+    # Width = 320, Height = 240
+    lambda: !? $_.render
+
+
+sensor:
+  - !for $_.hass.sensor: !()
+    - !? '$.delete("entity_id").delete("on_value").mergeWith(dict("platform" => "template"))'
+
+text_sensor:
+  - !for $_.hass.text_sensor: !()
+    - !? '$.delete("entity_id").delete("on_value").mergeWith(dict("platform" => "template"))'
+
+  - platform: template
+    id: time_display_format
+    update_interval: never
+
+
+## BEGIN - Touchscreen
+i2c:
+  sda: GPIO8
+  scl: GPIO18
+  scan: false
+
+touchscreen:
+  - platform: tt21100
+    update_interval: 50ms
+    address: 0x24
+    interrupt_pin: GPIO3
+    # reset_pin: GPIO48
+    on_touch:
+      - logger.log: "Touchscreen:: Touched"
+    on_release:
+      - logger.log: "Touchscreen:: Released"
+
+# i2c:
+#   - id: bus_a
+#     sda: GPIO08
+#     scl: GPIO18
+#     scan: false
+#     #sda_pullup_enabled: true
+#     #scl_pullup_enabled: true
+#     frequency: 100kHz
+
+#   - sda: GPIO41
+#     scl: GPIO40
+#     scan: false
+#     #sda_pullup_enabled: true
+#     #scl_pullup_enabled: true
+#     frequency: 50kHz
+#     id: bus_b
+
+# touchscreen:
+#   - platform: gt911
+#     i2c_id: bus_a
+#     id: gt911_touchscreen
+#     interrupt_pin:
+#       number: GPIO3
+#       ignore_strapping_warning: true
+
+# i2c:
+#   - id: bus_a
+#     sda: GPIO08
+#     scl: GPIO18
+#     scan: false
+#     sda_pullup_enabled: true
+#     scl_pullup_enabled: true
+#     frequency: 50kHz
+
+
+
+#touchscreen:
+#  - platform: tt21100
+#    address: 0x24
+#    interrupt_pin: GPIO3
+    # Don't use as the reset pin is shared with the display, so the ili9xxx will perform the reset
+    #reset_pin: GPIO48
+
+# touchscreen:
+#   - platform: gt911
+#     i2c_id: bus_a
+#     id: gt911_touchscreen
+#     interrupt_pin:
+#       number: GPIO3
+#       ignore_strapping_warning: true
+
+
+  
+binary_sensor:
+  - !for $_.hass.binary_sensor: !()
+    - !? $
+
+
+
+
+    

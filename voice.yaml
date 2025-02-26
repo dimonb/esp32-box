@@ -1,0 +1,250 @@
+voice_assistant:
+  id: va
+  microphone: box_mic
+  media_player: adf_media_player
+  use_wake_word: true
+  noise_suppression_level: 2
+  auto_gain: 31dBFS
+  volume_multiplier: 4.0
+  on_wake_word_detected:
+    - if:
+        condition:
+          and:
+            - switch.is_off: output_audio          
+            - switch.is_on: wake_sound
+        then:    
+          - media_player.play_media:
+              media_url: '${home_assistant_host}/local/sounds/awake.mp3'
+          - delay: 500ms
+          - media_player.stop
+          - display.page.show: listening_page
+          - component.update: s3_box_lcd
+        else:
+          if:
+            condition:
+              and:
+                - switch.is_on: wake_sound
+                - switch.is_on: output_audio
+            then:
+              - homeassistant.service:
+                  service: media_player.play_media
+                  data:
+                    entity_id: media_player.${external_media_player}
+                    media_content_id: '${home_assistant_host}/local/sounds/awake.mp3'
+                    media_content_type: music
+    - media_player.stop
+  on_start:    
+    if: 
+      condition:
+        - display.is_displaying_page: listening_page
+        - display.is_displaying_page: thinking_page
+      then:
+        - display.page.show: idle_page
+        - component.update: s3_box_lcd
+  on_listening:
+    - text_sensor.template.publish:
+        id: text_request
+        state: "..."
+    - text_sensor.template.publish:
+        id: text_response
+        state: "..."
+    - script.execute: saver_enabled
+    - display.page.show: listening_page
+    - component.update: s3_box_lcd
+  on_stt_end:
+    - text_sensor.template.publish:
+        id: text_request
+        state: !lambda return x;
+  on_stt_vad_end: 
+    - display.page.show: thinking_page
+    - component.update: s3_box_lcd
+  on_tts_start:
+    - text_sensor.template.publish:
+        id: text_response
+        state: !lambda return x;
+  on_tts_end:
+    - if:
+        condition: 
+          and:
+            - switch.is_on: mute_response_switch
+            - switch.is_off: media_mute
+            - switch.is_off: ext_media_mute
+        then:
+          - switch.turn_on: media_mute
+          - switch.turn_on: ext_media_mute                  
+    - display.page.show: replying_page
+    - component.update: s3_box_lcd
+    - if:
+        condition:
+          - switch.is_on: output_audio
+        then:
+          - homeassistant.service:
+              service: media_player.play_media
+              data:
+                entity_id: media_player.${external_media_player}
+                media_content_id: !lambda 'return x;'
+                media_content_type: music
+                announce: "false"
+    - delay: 5s
+    - display.page.show: idle_page
+    - component.update: s3_box_lcd
+   
+  on_error:
+    - if:
+        condition:
+          not:
+            - voice_assistant.is_running
+        then:
+          - display.page.show: error_page
+          - component.update: s3_box_lcd
+          - delay: 4s
+          - if:
+              condition:
+                - display.is_displaying_page: error_page
+              then:
+                - display.page.show: idle_page
+                - component.update: s3_box_lcd
+
+  on_idle:
+    - display.page.show: idle_page
+    - component.update: s3_box_lcd 
+    
+  on_end:
+    - if:
+        condition:
+          and:
+            - switch.is_off: mute_switch
+            - lambda: return id(wake_word_engine_location).state == "On device";
+        then:
+          - voice_assistant.stop
+          - wait_until:
+              not:
+                voice_assistant.is_running
+          - delay: 100ms
+          - micro_wake_word.start
+
+        else:
+          if:
+            condition: 
+              - switch.is_off: mute_switch  
+            then:              
+              - wait_until:
+                  not:
+                    voice_assistant.is_running
+              - lambda: id(va).set_use_wake_word(false);
+              - voice_assistant.stop
+              - delay: 100ms
+              - lambda: id(va).set_use_wake_word(true);
+              - delay: 100ms
+              - voice_assistant.start 
+    - if:
+        condition: 
+          and:
+            - switch.is_on: mute_response_switch
+            - switch.is_on: media_mute
+            - switch.is_on: ext_media_mute
+        then:
+           - switch.turn_off: media_mute
+           - switch.turn_off: ext_media_mute 
+          
+  on_client_connected:
+    - if:
+        condition:
+          and:
+            - switch.is_off: mute_switch
+            - lambda: return id(wake_word_engine_location).state == "On device";
+        then:
+          - micro_wake_word.start 
+        else:
+          - if:
+              condition: 
+                - switch.is_off: mute_switch          
+              then:
+                - lambda: id(va).set_use_wake_word(true);
+                - voice_assistant.start      
+  on_timer_started:
+    - script.execute: timer_ending
+    - component.update: s3_box_lcd
+  on_timer_cancelled:
+    - lambda: id(time_remaining_0).publish_state ("0:00:00"); 
+    - component.update: s3_box_lcd
+  on_timer_updated:
+    - component.update: s3_box_lcd
+  on_timer_tick:
+    - lambda: |-
+        int seconds = timers[0].seconds_left;
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        seconds %= 60;
+        id(time_remaining_0).publish_state(str_sprintf("%d:%02d:%02d", hours, minutes, seconds)); 
+    - component.update: s3_box_lcd
+  on_timer_finished:
+    if: 
+      condition:
+        - switch.is_on: output_audio
+      then:
+        - switch.turn_on: timer_ringing
+        - script.execute: timer_started_external
+        - display.page.show: timer_finished_page
+        - component.update: s3_box_lcd
+      else:
+        - if:
+            condition:
+              - switch.is_off: output_audio
+            then:
+              - switch.turn_on: timer_ringing
+              - script.execute: timer_started
+              - display.page.show: timer_finished_page
+              - component.update: s3_box_lcd
+    
+micro_wake_word:  
+  vad:
+  models: 
+    - model: ${micro_wake_word_model_1}
+    - model: ${micro_wake_word_model_2}
+    - model: ${micro_wake_word_model_3}
+    - model: ${micro_wake_word_model_4}
+  on_wake_word_detected:
+    - if:
+        condition:
+          and:
+            - switch.is_off: output_audio          
+            - switch.is_on: wake_sound
+        then:
+          - media_player.play_media:
+              id: adf_media_player
+              media_url: '${home_assistant_host}/local/sounds/awake.mp3'
+          - delay: 500ms
+          - media_player.stop
+          - voice_assistant.start
+        else:
+          if:
+            condition:
+              and:
+                - switch.is_on: output_audio
+                - switch.is_on: wake_sound
+            then:
+              - homeassistant.service:
+                  service: media_player.play_media
+                  data:
+                    entity_id: media_player.${external_media_player}
+                    media_content_id: '${home_assistant_host}/local/sounds/awake.mp3'
+                    media_content_type: music
+              - media_player.stop
+              - voice_assistant.start
+            else:
+              if:
+                condition:
+                  - switch.is_off: wake_sound
+                then:
+                  - media_player.stop
+                  - voice_assistant.start
+
+microphone:
+  - platform: adf_pipeline
+    id: box_mic
+    keep_pipeline_alive: true
+    pipeline:
+      - adf_i2s_in
+      - resampler
+      - self

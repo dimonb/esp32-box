@@ -1,0 +1,47 @@
+text_sensor:
+  - platform: homeassistant
+    name: "Weather Condition"
+    entity_id: sensor.openweathermap_condition
+    id: openweathermap_condition
+    on_value:
+      - component.update: s3_box_lcd
+      
+  - platform: homeassistant
+    name: "Sun next dawn"
+    entity_id: sensor.sun_next_dawn
+    id: sun_next_dawn
+
+  - platform: homeassistant
+    name: "Sun next dusk"
+    entity_id: sensor.sun_next_dusk
+    id: sun_next_dusk
+
+sensor:
+  - platform: homeassistant
+    id: openweathermap_temperature
+    entity_id: sensor.openweathermap_temperature
+    internal: True
+    on_value:
+      component.update: s3_box_lcd
+
+  - platform: homeassistant
+    id: co2_bedroom
+    entity_id: sensor.co2_bedroom
+    internal: True
+    on_value:
+      component.update: s3_box_lcd
+
+
+  - platform: homeassistant
+    id: temperature_bedroom
+    entity_id: sensor.sensor_temp02_temperature
+    internal: True
+    on_value:
+      component.update: s3_box_lcd
+
+
+binary_sensor:
+  - platform: homeassistant
+    id: bedroom_light
+    entity_id: light.pw_switch02
+
