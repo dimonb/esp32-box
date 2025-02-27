@@ -1,0 +1,249 @@
+number:
+  - id: s_saver_delay
+    platform: template
+    name: "Scr/save delay"
+    icon: 'mdi:sleep'
+    entity_category: config
+    unit_of_measurement: 'secs'
+    optimistic: true
+    restore_value: true
+    initial_value: 30
+    step: 5
+    min_value: 10
+    max_value: 999999
+    on_value:
+      - component.update: s3_box_lcd
+      - component.update: s_saver_delay
+      - script.execute: saver_enabled
+      
+  - id: s_saver_blank_delay
+    platform: template
+    name: "Scr/off delay"
+    icon: 'mdi:monitor-off'
+    entity_category: config
+    unit_of_measurement: 'secs'
+    optimistic: true
+    restore_value: true
+    initial_value: 30
+    step: 5
+    min_value: 10
+    max_value: 999999
+    on_value:
+      - component.update: s_saver_blank_delay
+      - script.execute: saver_enabled
+      - component.update: s3_box_lcd
+      
+  - id: s_saver_brightness
+    platform: template
+    name: "Scr/save Brightness"
+    icon: 'mdi:sleep'
+    entity_category: config
+    unit_of_measurement: '%'
+    optimistic: true
+    restore_value: true
+    initial_value: 30
+    step: 5
+    min_value: 20
+    max_value: 100
+    on_value:
+      - component.update: s_saver_brightness
+      - script.execute: saver_enabled
+      - component.update: s3_box_lcd
+      
+  - id: s_default_brightness
+    platform: template
+    name: "Default Brightness"
+    icon: 'mdi:monitor'
+    entity_category: config
+    unit_of_measurement: '%'
+    optimistic: true
+    restore_value: true
+    initial_value: 100
+    step: 5
+    min_value: 20
+    max_value: 100
+    on_value:
+      - component.update: s_default_brightness
+      - script.execute: saver_enabled
+      - component.update: s3_box_lcd
+
+
+
+switch:
+  - platform: template
+    name: Display conversation
+    id: display_conversation
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    icon: 'mdi:chat'
+
+  - platform: template
+    name: Output audio externally
+    id: output_audio
+    icon: 'mdi:volume-off'
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config  
+    on_turn_on: 
+      media_player.volume_set:    
+        id: adf_media_player
+        volume: 0    
+    on_turn_off: 
+      media_player.volume_set:    
+        id: adf_media_player
+        volume: 1.0 
+      
+  - platform: template
+    name: Mute
+    id: mute_switch
+    icon: "mdi:microphone-off"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    on_turn_on:
+      then:
+        - voice_assistant.stop
+        - micro_wake_word.stop
+    on_turn_off:
+      - if:
+          condition:
+            not:
+              - voice_assistant.is_running
+          then:
+            - if:
+                condition:
+                  lambda: return id(wake_word_engine_location).state == "In Home Assistant";
+                then:
+                  - lambda: id(va).set_use_wake_word(true);
+                  - delay: 50ms
+                  - voice_assistant.start_continuous
+            - if:
+                condition:
+                  lambda: return id(wake_word_engine_location).state == "On device";
+                then:
+                  - lambda: id(va).set_use_wake_word(false);
+                  - micro_wake_word.start
+            - component.update: s3_box_lcd
+
+  - platform: template
+    id: media_mute
+    optimistic: true
+    on_turn_on:   
+      media_player.volume_set:    
+        id: adf_media_player
+        volume: 0
+    on_turn_off:
+      media_player.volume_set: 
+        id: adf_media_player
+        volume: 1.0       
+        
+  - platform: template
+    id: s_saver
+    name: Scr/save enable
+    icon: mdi:sleep
+    optimistic: true    
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+     
+  - platform: template
+    id: s_saver_mode
+    name: Scr/off enable
+    icon: 'mdi:monitor-off'
+    optimistic: true    
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+     
+  - platform: template
+    id: timer_ringing
+    optimistic: true
+    internal: true
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      - lambda: id(led).turn_on().set_brightness(1.0).perform();
+      - delay: 15min
+      - switch.turn_off: timer_ringing 
+    on_turn_off:
+      - media_player.stop
+      
+  - platform: template
+    id: wake_sound
+    name: Play wake sound
+    icon: mdi:music
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    
+  - platform: template
+    id: mute_response_switch
+    name: Mute Responses
+    icon: mdi:chat-sleep
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    
+  - platform: template
+    id: brightness_auto
+    name: Brightness Auto
+    icon: mdi:brightness-auto
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: template
+    id: ext_media_mute
+    icon: 'mdi:volume-off'
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    on_turn_on:
+      then:
+        - homeassistant.service:
+            service: media_player.volume_mute
+            data:
+              entity_id: media_player.${external_media_player}
+    on_turn_off:
+        - homeassistant.service:
+            service: media_player.volume_mute
+            data:
+              entity_id: media_player.${external_media_player}    
+
+
+
+script:
+  - id: saver_enabled
+    then:
+      - if:
+          condition: 
+            switch.is_on: s_saver 
+          then:
+            - lambda: id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
+            - delay: !lambda return id(s_saver_delay).state * 1000;
+            - lambda: id(led).turn_on().set_brightness(id(s_saver_brightness).state /100).perform();
+            - display.page.show: saver_page
+            - component.update: s3_box_lcd
+      - if:
+          condition:
+            - switch.is_on: s_saver_mode            
+          then:
+            - delay: !lambda return id(s_saver_blank_delay).state * 1000;
+            - light.turn_off: led
+    mode: restart
+
+  - id: saver_enabled_manual
+    then:
+      - if:
+          condition: 
+            - switch.is_on: s_saver 
+          then:
+            - lambda: id(led).turn_on().set_brightness(id(s_saver_brightness).state /100).perform();
+            - display.page.show: saver_page
+            - component.update: s3_box_lcd
+      - if:
+          condition:
+            - switch.is_on: s_saver_mode            
+          then:
+            - delay: !lambda return id(s_saver_blank_delay).state * 1000;
+            - light.turn_off: led
+            - component.update: s3_box_lcd
+    mode: restart 

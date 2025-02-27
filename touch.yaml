@@ -359,7 +359,7 @@ buttons: !-
 
   - id: s_default_bright_down
     x: 280
-    y: 130
+    y: 128
     w: 40
     h: 40
     on_press:
@@ -373,11 +373,11 @@ buttons: !-
           call.perform();
       - component.update: s3_box_lcd
     draw:
-      - !? '"it.printf(315, 130, id(icon_font_35), lime, TextAlign::RIGHT, \"" + $_.icon_glyphs.down + "\");"'    
+      - !? '"it.printf(315, 128, id(icon_font_35), lime, TextAlign::RIGHT, \"" + $_.icon_glyphs.down + "\");"'    
         
   - id: s_default_bright_up
     x: 170
-    y: 130
+    y: 128
     w: 40
     h: 40
     on_press:
@@ -391,7 +391,7 @@ buttons: !-
       - "it.printf(15, 135, id(my_font22), light_blue, \"Brightness\");"     #common for both up and down
       - "it.printf(245, 135, id(my_font22), light_blue, TextAlign::CENTER_HORIZONTAL, \"%.f\", id(s_default_brightness).state);"         
       - "it.rectangle(223, 132 , 46 , 26 , light_blue);"
-      - !? '"it.printf(175, 130, id(icon_font_35), lime, TextAlign::LEFT, \"" + $_.icon_glyphs.up + "\");"'    
+      - !? '"it.printf(175, 128, id(icon_font_35), lime, TextAlign::LEFT, \"" + $_.icon_glyphs.up + "\");"'    
 
   - id: ext_media_toggle
     x: 280

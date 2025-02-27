@@ -16,23 +16,41 @@ add: !-
     id(openweathermap_condition).publish_state("cloudy");
     id(openweathermap_temperature).publish_state(18.0);
 
-render: !- $_.add.lambda + $_.touch.rendered_pages.select($[0]).where($.id = "idle_page").first().lambda
+#render: !- $_.add.lambda + $_.touch.rendered_pages.select($[0]).where($.id = "idle_page").first().lambda
+
+
+#render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "settings_page").first().lambda'
+#render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "device_set_page").first().lambda'
+render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "idle_page").first().lambda'
 
 
 resources: !- $import('resources.yaml')
 #image: !? $_.resources.image
+
+image:
+  - !for $_.resources.image.where($.id = "logo_img"): !()
+    - !? $
+
 font: 
   - !for $_.resources.font: !()
-    - file: !? $.file
-      id: !? $.id
-      size: !? $.size
-      bpp: 1
-      glyphs:
-        !? $.glyphs
+    - !? $.mergeWith(dict("bpp" => 1))
 
 color: !? $_.resources.color
 
+
 hass: !- $import('hass.yaml')
+
+settings: !- $import('settings.yaml')
+number: !? $_.settings.number
+switch: 
+  - !for $_.settings.switch: !()
+    - !? $.delete("on_turn_off").delete("on_turn_on")
+
+script:   
+  - !for $_.settings.script: !()
+    - !? $.delete("then").mergeWith(dict("then" => []))
+
+
 
 esphome:
   name: test-esp32-device
@@ -44,10 +62,14 @@ esp32:
   framework:
     type: arduino
 
-
 external_components:
-  - source: github://rpatel3001/esphome@es7210
-    components: [ es7210 ]
+  - source:
+      type: git
+      url: https://github.com/dimonb/esphome_audio
+      ref: dev-next
+    components: [ adf_pipeline, i2s_audio ]
+    refresh: 0s  
+
 
 
 wifi:
@@ -69,23 +91,8 @@ time:
 logger:
   # CDC logging is currently not working on the S3
   # See https://github.com/espressif/esp-idf/commit/9924d9f27192a5fab5f66230c72249ecc6cad34c
-  #hardware_uart: USB_CDC
+  hardware_uart: USB_CDC
   level: VERBOSE
-  logs:
-    esp32_ble: WARN
-    esp32_ble_tracker: WARN
-    ble_dist: WARN
-    sensor: WARN
-    ledc.output: WARN
-    component: WARN
-    ili9xxx: WARN
-    tt21100: WARN
-    touchscreen: WARN
-    wifi: WARN
-    es8311: WARN
-    i2s_audio: VERBOSE
-    voice_assistant: VERBOSE
-    es7210: WARN
 
 
 globals:
@@ -98,16 +105,6 @@ globals:
     type: bool
     restore_value: no
     initial_value: "false" 
-
-
-switch:
-  - platform: template
-    name: Mute
-    id: mute_switch
-    icon: "mdi:microphone-off"
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-    entity_category: config
 
 
 output:
