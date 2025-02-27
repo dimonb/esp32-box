@@ -91,7 +91,7 @@ time:
 logger:
   # CDC logging is currently not working on the S3
   # See https://github.com/espressif/esp-idf/commit/9924d9f27192a5fab5f66230c72249ecc6cad34c
-  hardware_uart: USB_CDC
+  hardware_uart: UART0
   level: VERBOSE
 
 
