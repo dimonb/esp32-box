@@ -7,7 +7,6 @@ substitutions: !? '$_.sub.delete("font_glyphs").mergeWith(dict("font_glyphs" => 
 
 json:
 
-q: !- $import('l1.yaml')
   
 touch: !- $import('touch.yaml')
 
@@ -26,7 +25,6 @@ touch: !- $import('touch.yaml')
 #render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "device_set_page").first().lambda'
 #render: !- '$_.touch.rendered_pages[0].where($.id = "idle_page").first().lambda'
 #render: !- '$_.touch.rendered_pages[0].where($.id = "weather_forecast_page").first().lambda'
-render: !- $_.q.lambda
 
 resources: !- $import('pages/resources.yaml')
 #image: !? $_.resources.image

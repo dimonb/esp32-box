@@ -34,7 +34,7 @@ clean: $(YML)
 	rm -rf .esphome/
 
 
-.esphome/test/layout.test.yaml: layout.test.yglu.yaml $(DEPS) l1.yaml
+.esphome/test/layout.test.yaml: layout.test.yglu.yaml $(DEPS)
 	mkdir -p .esphome/test
 	$(YTE) < layout.test.yglu.yaml > .esphome/test/layout.test.yaml.tmp
 	mv .esphome/test/layout.test.yaml.tmp .esphome/test/layout.test.yaml
