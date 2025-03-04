@@ -16,6 +16,25 @@ text_sensor:
     entity_id: sensor.sun_next_dusk
     id: sun_next_dusk
 
+  - platform: homeassistant
+    id: ims_forecast_today
+    name: "IMS Forecast Today"
+    entity_id: sensor.ims_forecast_today_json
+    on_value:
+      - lambda: |
+          ESP_LOGD("ims_forecast_today", "IMS Forecast Today: %s", id(ims_forecast_today).state.c_str());
+      - component.update: s3_box_lcd
+
+  - platform: homeassistant
+    id: ims_forecast_day1
+    name: "IMS Forecast Day 1"
+    entity_id: sensor.ims_forecast_day1
+    attribute: description
+    on_value:
+      - lambda: |
+          ESP_LOGD("ims_forecast_day1", "IMS Forecast Day 1: %s", id(ims_forecast_day1).state.c_str());
+      - component.update: s3_box_lcd
+
 sensor:
   - platform: homeassistant
     id: openweathermap_temperature
@@ -39,6 +58,26 @@ sensor:
     on_value:
       component.update: s3_box_lcd
 
+
+  # - !for list(0, 1, 2, 3, 4): !()
+  #     - platform: homeassistant
+  #       id: !? '"temperature_forecast_max_day_" + str($)'
+  #       entity_id: !? '"sensor.home_assistant_realfeel_temperature_max_day_" + str($)'
+  #       internal: True
+  #       on_value:
+  #         component.update: s3_box_lcd
+  #     - platform: homeassistant
+  #       id: !? '"temperature_forecast_min_day_" + str($)'
+  #       entity_id: !? '"sensor.home_assistant_realfeel_temperature_min_day_" + str($)'
+  #       internal: True
+  #       on_value:
+  #         component.update: s3_box_lcd
+  #     - platform: homeassistant
+  #       id: !? '"condition_forecast_day_" + str($)'
+  #       entity_id: !? '"sensor.home_assistant_condition_day_" + str($)'
+  #       internal: True
+  #       on_value:
+  #         component.update: s3_box_lcd
 
 binary_sensor:
   - platform: homeassistant

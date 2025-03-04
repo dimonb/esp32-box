@@ -94,6 +94,9 @@ icon_glyphs: !-
   weather_sunset_up: "\U000F059C"
   weather_windy: "\U000F059D"
   weather_windy_variant: "\U000F059E"
+  wifi_75: "\U000F0925"
+  wifi_50: "\U000F0922"
+  wifi_25: "\U000F091F"
 
 
 image:
@@ -130,7 +133,7 @@ image:
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/logo.png"
     id: logo_img
     resize: 80x75
-    type: RGB
+    type: RGB565
     transparency: alpha_channel
 
 font:
@@ -170,6 +173,8 @@ color:
     hex: 'D92BBC'
   - id: yellow
     hex: 'FFC000'
+  - id: dark_gray
+    hex: '4F4F4F'
   - id: black
     hex: '000000'
   - id: white

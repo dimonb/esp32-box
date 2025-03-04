@@ -440,6 +440,10 @@ buttons: !-
       - "it.printf(65, 180, id(my_font22), light_blue, \"Time Format:\");"
       - "it.printf(210, 180, id(my_font22), lime, \"%s\", id(time_display_format).state.c_str());"
 
+  - id: weather_forecast_back
+    draw:
+      - "it.printf(65, 180, id(my_font22), light_blue, \"Time Format:\");"
+
 touch_pages: !-
   - id: idle_page
     buttons: 
@@ -558,6 +562,14 @@ touch_pages: !-
       - ext_media_toggle
       - brightness_auto_toggle
       - chang_display_format
+
+  - id: weather_forecast_page
+    buttons:
+      - status_bar_title
+      - status_bar_mute_switch
+      - status_bar_api_connection
+      - status_bar_wifi_connection
+      - weather_forecast_back
       
 rendered_pages: !-
   - !? |

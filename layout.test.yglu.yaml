@@ -5,35 +5,57 @@ sub: !- $_.config.substitutions
 
 substitutions: !? '$_.sub.delete("font_glyphs").mergeWith(dict("font_glyphs" => "&@!\"%(){}+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"))'
 
+json:
 
+q: !- $import('l1.yaml')
+  
 touch: !- $import('touch.yaml')
 
-add: !-
-  lambda: |
-    id(time_display_format).publish_state("24 Hr");
-    id(temperature_bedroom).publish_state(21.2);
-    id(co2_bedroom).publish_state(1200);
-    id(openweathermap_condition).publish_state("cloudy");
-    id(openweathermap_temperature).publish_state(18.0);
+# add: !-
+#   lambda: |
+#     id(time_display_format).publish_state("24 Hr");
+#     id(temperature_bedroom).publish_state(21.2);
+#     id(co2_bedroom).publish_state(1200);
+#     id(openweathermap_condition).publish_state("cloudy");
+#     id(openweathermap_temperature).publish_state(18.0);
 
 #render: !- $_.add.lambda + $_.touch.rendered_pages.select($[0]).where($.id = "idle_page").first().lambda
 
 
 #render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "settings_page").first().lambda'
 #render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "device_set_page").first().lambda'
-render: !- '$_.add.lambda + $_.touch.rendered_pages[0].where($.id = "idle_page").first().lambda'
+#render: !- '$_.touch.rendered_pages[0].where($.id = "idle_page").first().lambda'
+#render: !- '$_.touch.rendered_pages[0].where($.id = "weather_forecast_page").first().lambda'
+render: !- $_.q.lambda
 
-
-resources: !- $import('resources.yaml')
+resources: !- $import('pages/resources.yaml')
 #image: !? $_.resources.image
 
 image:
   - !for $_.resources.image.where($.id = "logo_img"): !()
     - !? $
 
-font: 
-  - !for $_.resources.font: !()
+icon_glyphs: !- $_.resources.icon_glyphs
+
+font:
+  - !for $_.resources.font.where($.id = "icon_font_25" or $.id = "my_font22" or $.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75"): !()
     - !? $.mergeWith(dict("bpp" => 1))
+  - !for $_.resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
+    - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
+
+lvgl:
+  displays:
+    - s3_box_lcd
+  touchscreens:
+    - s3_box_touch
+  top_layer: !? $import('pages/top_layer.yaml')
+
+  pages:
+    - !? $import('pages/page_main.yaml')
+    - !? $import('pages/page_settings.yaml')
+
+  style_definitions: !? $import('pages/styles.yaml')
+
 
 color: !? $_.resources.color
 
@@ -46,19 +68,35 @@ switch:
   - !for $_.settings.switch: !()
     - !? $.delete("on_turn_off").delete("on_turn_on")
 
+# Example configuration entry
+http_request:
+  useragent: esphome/device
+  timeout: 10s
+  verify_ssl: false
+
 script:   
   - !for $_.settings.script: !()
     - !? $.delete("then").mergeWith(dict("then" => []))
 
-
-
 esphome:
   name: test-esp32-device
   friendly_name: test-esp32-device
+  platformio_options:
+    board_build.partitions: partitions.csv
+  on_boot:
+    priority: 600
+    then:
+      - lambda: |-
+          id(time_display_format).publish_state("24 Hr");
+          id(temperature_bedroom).publish_state(21.2);
+          id(co2_bedroom).publish_state(1200);
+          id(openweathermap_condition).publish_state("cloudy");
+          id(openweathermap_temperature).publish_state(18.0);
+      - component.update: s3_box_lcd
 
 esp32:
   board: esp32s3box
-  #flash_size: 8MB
+  # flash_size: 16MB
   framework:
     type: arduino
 
@@ -89,10 +127,10 @@ time:
 
 
 logger:
-  # CDC logging is currently not working on the S3
-  # See https://github.com/espressif/esp-idf/commit/9924d9f27192a5fab5f66230c72249ecc6cad34c
-  hardware_uart: UART0
-  level: VERBOSE
+  hardware_uart: UART0 # Emulator uses UART0, real device uses USB_CDC
+  level: DEBUG
+  #logs:
+  #  lvgl: VERBOSE
 
 
 globals:
@@ -134,25 +172,39 @@ display:
     #reset_pin:
     #  number: 48
     #  inverted: true
-    update_interval: 5s
+    #update_interval: 5s
     id: s3_box_lcd
-    #auto_clear_enabled: false
+    auto_clear_enabled: false
     invert_colors: false
     # Width = 320, Height = 240
-    lambda: !? $_.render
+    #lambda: !? $_.render
 
 
 sensor:
   - !for $_.hass.sensor: !()
-    - !? '$.delete("entity_id").delete("on_value").mergeWith(dict("platform" => "template"))'
+    - !? '$.delete("entity_id").delete("on_value").delete("attribute").mergeWith(dict("platform" => "template"))'
 
 text_sensor:
   - !for $_.hass.text_sensor: !()
-    - !? '$.delete("entity_id").delete("on_value").mergeWith(dict("platform" => "template"))'
+    - !? '$.delete("entity_id").delete("on_value").delete("attribute").mergeWith(dict("platform" => "template"))'
 
   - platform: template
     id: time_display_format
     update_interval: never
+
+  - platform: template
+    id: temp_json
+    internal: true
+    update_interval: 600s
+    lambda: |-
+      return std::string("{\"00\": 9.5,\"01\":11.4,\"02\":12.1,\"03\":13.4,\"04\":13.4,\"05\":12.4,\"06\":15.4,\"07\":13.4,\"08\":13.4,\"09\":13.4,\"10\":13.4,\"11\":16.4,\"12\":13.4,\"13\":13.4,\"14\":13.4,\"15\":13.4,\"16\":13.4,\"17\":13.4,\"18\":13.4,\"19\":13.4,\"20\":11.5, \"21\": 10.5, \"22\": 9.5, \"23\": 8.5}");
+
+
+
+  
+binary_sensor:
+  - !for $_.hass.binary_sensor: !()
+    - !? $
 
 
 ## BEGIN - Touchscreen
@@ -163,73 +215,18 @@ i2c:
 
 touchscreen:
   - platform: tt21100
-    update_interval: 50ms
+    #update_interval: 50ms
     address: 0x24
     interrupt_pin: GPIO3
-    # reset_pin: GPIO48
-    on_touch:
-      - logger.log: "Touchscreen:: Touched"
-    on_release:
-      - logger.log: "Touchscreen:: Released"
-
-# i2c:
-#   - id: bus_a
-#     sda: GPIO08
-#     scl: GPIO18
-#     scan: false
-#     #sda_pullup_enabled: true
-#     #scl_pullup_enabled: true
-#     frequency: 100kHz
-
-#   - sda: GPIO41
-#     scl: GPIO40
-#     scan: false
-#     #sda_pullup_enabled: true
-#     #scl_pullup_enabled: true
-#     frequency: 50kHz
-#     id: bus_b
-
-# touchscreen:
-#   - platform: gt911
-#     i2c_id: bus_a
-#     id: gt911_touchscreen
-#     interrupt_pin:
-#       number: GPIO3
-#       ignore_strapping_warning: true
-
-# i2c:
-#   - id: bus_a
-#     sda: GPIO08
-#     scl: GPIO18
-#     scan: false
-#     sda_pullup_enabled: true
-#     scl_pullup_enabled: true
-#     frequency: 50kHz
-
-
-
-#touchscreen:
-#  - platform: tt21100
-#    address: 0x24
-#    interrupt_pin: GPIO3
-    # Don't use as the reset pin is shared with the display, so the ili9xxx will perform the reset
     #reset_pin: GPIO48
-
-# touchscreen:
-#   - platform: gt911
-#     i2c_id: bus_a
-#     id: gt911_touchscreen
-#     interrupt_pin:
-#       number: GPIO3
-#       ignore_strapping_warning: true
-
-
-  
-binary_sensor:
-  - !for $_.hass.binary_sensor: !()
-    - !? $
-
-
-
-
-    
+    display: s3_box_lcd
+    id: s3_box_touch
+    transform:
+      #swap_xy: true
+      mirror_x: true
+      mirror_y: false
+    calibration:
+      x_min: 0
+      x_max: 320
+      y_min: 0
+      y_max: 240

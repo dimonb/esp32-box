@@ -1,0 +1,81 @@
+resources: !- $import('resources.yaml')
+icon_glyphs: !- $_.resources.icon_glyphs
+
+widgets:
+  - obj:
+      x: 4
+      align: TOP_LEFT
+      styles: [layout_box]
+      width: SIZE_CONTENT
+      height: 40
+      layout:
+        pad_column: 3
+        type: GRID
+        grid_columns: [CONTENT, CONTENT, CONTENT]
+        grid_rows: [39]
+      widgets:
+        - label:
+            id: api_status
+            styles: [toolbar_icon]
+            text: !? $_.icon_glyphs.api_connected
+            grid_cell_column_pos: 0
+            grid_cell_row_pos: 0
+            on_click:
+              - lvgl.page.show: settings_page
+        - label:
+            id: wifi_status
+            styles: [toolbar_icon]
+            text: !? $_.icon_glyphs.wifi_connected
+            grid_cell_column_pos: 1
+            grid_cell_row_pos: 0
+            on_click:
+              - lambda: |-
+                  ESP_LOGI("linavg", "WIFI connected");
+        - label:
+            id: mic_status
+            styles: [toolbar_icon]
+            text_color: green
+            text: !? $_.icon_glyphs.mic_on
+            grid_cell_column_pos: 2
+            grid_cell_row_pos: 0
+            on_click:
+              - lambda: |-
+                  ESP_LOGI("linavg", "Microphone");
+
+  - obj:
+      x: 0
+      align: TOP_RIGHT
+      styles: [layout_box]
+      width: SIZE_CONTENT
+      height: 35
+      layout:
+        pad_column: 3
+        type: GRID
+        grid_columns: [CONTENT, CONTENT, CONTENT]
+        grid_rows: [FR(1)]
+      widgets:
+        - label:
+            id: temp_bedroom_status
+            styles: [toolbar_text]
+            text: 23.0°
+            grid_cell_column_pos: 0
+            grid_cell_row_pos: 0
+        - label:
+            id: co2_bedroom_status
+            styles: [toolbar_text]
+            text: 1200
+            grid_cell_column_pos: 1
+            grid_cell_row_pos: 0
+            grid_cell_y_align: CENTER
+        - label:
+            id: co2_bedroom_icon
+            styles: [toolbar_icon]
+            text_font: icon_font_25
+            height: 25
+            width: 20
+            pad_right: 2
+            text: !? $_.icon_glyphs.co2
+            grid_cell_column_pos: 2
+            grid_cell_row_pos: 0
+            grid_cell_y_align: END
+            

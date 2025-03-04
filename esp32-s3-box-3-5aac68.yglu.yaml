@@ -90,6 +90,7 @@ api:
     - lambda: id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
     - component.update: s3_box_lcd
     - script.execute: saver_enabled
+
   on_client_disconnected:
     - lambda: |-
         id(api_connection) = false;

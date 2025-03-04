@@ -1,0 +1,75 @@
+resources: !- $import('resources.yaml')
+icon_glyphs: !- $_.resources.icon_glyphs
+
+id: page_main
+bg_color: black
+widgets:
+    - obj:
+        align: BOTTOM_MID
+        styles: [layout_box, main_layout]
+        layout:
+          type: GRID
+          grid_columns: [FR(1)]
+          grid_rows: [50, 40, 80]
+        widgets:
+          - label:
+              id: label_clock
+              text: !lambda return id(ha_time).now().strftime("%H:%M");
+              text_font: my_font82
+              text_color: white
+              grid_cell_row_pos: 0
+              grid_cell_column_pos: 0
+              grid_cell_x_align: CENTER
+              grid_cell_y_align: STRETCH
+          - label:
+              id: label_date
+              text: !lambda return id(ha_time).now().strftime("%a %d %b");
+              text_font: my_font22
+              text_color: white
+              grid_cell_row_pos: 1
+              grid_cell_column_pos: 0
+              grid_cell_x_align: CENTER
+              grid_cell_y_align: START
+
+          - obj:
+              styles: [layout_box]
+              grid_cell_row_pos: 2
+              grid_cell_column_pos: 0
+              grid_cell_x_align: STRETCH
+              grid_cell_y_align: STRETCH
+              layout:
+                type: FLEX
+                flex_flow: ROW
+                flex_align_main: CENTER
+                flex_align_cross: CENTER
+                flex_align_track: CENTER
+                pad_column: 20
+              widgets:
+                - button:
+                    id: button_music
+                    styles: [main_page_button]
+                    on_click:
+                      - lambda: |-
+                          ESP_LOGI("page_main", "Music button clicked");
+                    widgets:
+                      - label:
+                          text: !? $_.icon_glyphs.music
+                - button:
+                    id: button_light
+                    styles: [main_page_button]
+                    on_click:
+                      - lambda: |-
+                          ESP_LOGI("page_main", "Light button clicked");
+                    widgets:
+                      - label:
+                          text: !? $_.icon_glyphs.light_on
+                - button:
+                    id: button_weather
+                    styles: [main_page_button]
+                    on_click:
+                      - lambda: |-
+                          ESP_LOGI("page_main", "Weather button clicked");
+                    widgets:
+                      - label:
+                          text: !? $_.icon_glyphs.weather_cloudy
+

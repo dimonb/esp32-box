@@ -4,13 +4,16 @@ YTE = .venv/bin/yglu
 TPL = esp32-s3-box-3-5aac68.yglu.yaml
 YML = esp32-s3-box-3-5aac68.yaml
 
+PAGES = pages/resources.yaml pages/page_settings.yaml pages/top_layer.yaml pages/page_main.yaml pages/styles.yaml
+DEPS = config.yaml hass.yaml secrets.yaml settings.yaml touch.yaml voice.yaml $(PAGES)
+
 .venv: requirements.txt
 	rm -rf .venv
 	python3 -m venv .venv
 	.venv/bin/pip install -r requirements.txt
 
 .PHONY: run upload logs clean 
-$(YML): .venv $(TPL)
+$(YML): .venv $(TPL) $(DEPS)
 	$(YTE) < $(TPL) > $(YML).tmp
 	mv $(YML).tmp $(YML)
 	rm -f $(YML).tmp
@@ -31,7 +34,7 @@ clean: $(YML)
 	rm -rf .esphome/
 
 
-.esphome/test/layout.test.yaml: layout.test.yglu.yaml
+.esphome/test/layout.test.yaml: layout.test.yglu.yaml $(DEPS) l1.yaml
 	mkdir -p .esphome/test
 	$(YTE) < layout.test.yglu.yaml > .esphome/test/layout.test.yaml.tmp
 	mv .esphome/test/layout.test.yaml.tmp .esphome/test/layout.test.yaml

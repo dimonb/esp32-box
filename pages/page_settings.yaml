@@ -1,0 +1,105 @@
+resources: !- $import('resources.yaml')
+icon_glyphs: !- $_.resources.icon_glyphs
+
+id: settings_page
+bg_color: black
+widgets:
+  - obj:
+      styles: [layout_box, main_layout]
+      layout:
+        type: GRID
+        grid_columns: [FR(1)]
+        grid_rows: [20, FR(1)]
+        # flex_flow: COLUMN  # Stack elements vertically
+        # flex_align_cross: CENTER  # Center elements horizontally
+      widgets:
+        - label:
+            text: "settings"
+            text_font: my_font22
+            text_color: light_blue
+            align: CENTER
+            grid_cell_column_pos: 0
+            grid_cell_row_pos: 0
+            grid_cell_x_align: CENTER
+        - obj:
+            styles: [layout_box]
+            layout:
+              type: FLEX
+              flex_flow: ROW_WRAP
+              #flex_align_cross: SPACE_EVENLY
+              flex_align_main: CENTER
+              #flex_align_track: CENTER
+              pad_column: 15
+            width: 100%
+            height: 170
+            grid_cell_column_pos: 0
+            grid_cell_row_pos: 1
+            grid_cell_x_align: STRETCH
+            widgets:
+              - button:
+                  styles: settings_button                                   
+                  id: voice_settings
+                  widgets:
+                    - label:
+                        text: !? $_.icon_glyphs.mic_on
+                        styles: settings_button_icon
+                    - label:
+                        text: "Voice"
+                        styles: settings_button_label
+                  on_click:
+                    - lambda: |-
+                        ESP_LOGI("linavg", "Voice settings");
+              - button:
+                  styles: settings_button                    
+                  id: saver_settings
+                  widgets:
+                    - label:
+                        text: !? $_.icon_glyphs.screen_set
+                        styles: settings_button_icon
+                    - label:
+                        text: "Saver"
+                        styles: settings_button_label
+                  on_click:
+                    - lambda: |-
+                        ESP_LOGI("linavg", "Saver settings");
+              - button:
+                  styles: settings_button                    
+                  id: info_button
+                  widgets:
+                    - label:
+                        text: !? $_.icon_glyphs.info
+                        styles: settings_button_icon
+                    - label:
+                        text: "Info"
+                        styles: settings_button_label
+                  on_click:
+                    - lambda: |-
+                        ESP_LOGI("linavg", "Info");
+              - button:
+                  styles: settings_button                    
+                  id: device_button
+                  widgets:
+                    - label:
+                        text: !? $_.icon_glyphs.settings
+                        styles: settings_button_icon
+                    - label:
+                        text: "Device"
+                        styles: settings_button_label
+                  on_click:
+                    - lambda: |-
+                        ESP_LOGI("linavg", "Device");
+              - image:
+                  src: logo_img
+              - button:
+                  styles: settings_button                    
+                  id: test_button
+                  widgets:
+                    - label:
+                        text: !? $_.icon_glyphs.voice
+                        styles: settings_button_icon
+                    - label:
+                        text: "Test"
+                        styles: settings_button_label
+                  on_click:
+                    - lambda: |-
+                        ESP_LOGI("linavg", "Test");
