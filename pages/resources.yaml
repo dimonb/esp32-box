@@ -146,7 +146,7 @@ font:
         glyphs:
           '${font_glyphs}'
 
-  - ? !for list(25, 35, 60, 75, 180)
+  - ? !for list(15, 25, 35, 60, 75, 180)
     : !()
       - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/fonts/materialdesignicons-webfont.ttf"
         id: !? '"icon_font_" + str($)'

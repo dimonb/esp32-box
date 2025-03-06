@@ -4,7 +4,10 @@ YTE = .venv/bin/yglu
 TPL = esp32-s3-box-3-5aac68.yglu.yaml
 YML = esp32-s3-box-3-5aac68.yaml
 
-PAGES = pages/resources.yaml pages/page_settings.yaml pages/top_layer.yaml pages/page_main.yaml pages/styles.yaml
+PAGES = pages/resources.yaml pages/settings.yaml pages/top_layer.yaml \
+		pages/main.yaml pages/styles.yaml pages/wifi_info.yaml \
+		pages/weather.yaml
+
 DEPS = config.yaml hass.yaml secrets.yaml settings.yaml touch.yaml voice.yaml $(PAGES)
 
 .venv: requirements.txt
@@ -44,6 +47,10 @@ clean: $(YML)
 	mkdir -p .esphome/test
 	cp -p secrets.yaml .esphome/test/secrets.yaml
 
-test: .esphome/test/layout.test.yaml .esphome/test/secrets.yaml
+.esphome/test/helpers.h: helpers.h
+	mkdir -p .esphome/test
+	cp -p helpers.h .esphome/test/helpers.h
+
+test: .esphome/test/layout.test.yaml .esphome/test/secrets.yaml .esphome/test/helpers.h
 	$(ESPHOME) compile .esphome/test/layout.test.yaml
 

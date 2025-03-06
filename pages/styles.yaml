@@ -21,11 +21,11 @@
 - id: main_layout
   width: 300
   height: 200
-  align: CENTER
+  align: BOTTOM_MID
 - id: main_page_button
   width: 80
   height: 80
-  pad_all: 5
+  pad_all: 3
   border_width: 1
   shadow_width: 0
   bg_color: black
@@ -47,3 +47,15 @@
   text_align: CENTER
   grid_cell_x_align: STRETCH
   grid_cell_y_align: CENTER
+
+- id: weather_chart
+  bg_color: black
+  bg_opa: TRANSP
+  border_width: 0
+  width: 245
+  height: 119
+  x: 20
+  y: 30
+- id: weather_small_icon
+  text_font: icon_font_15
+  text_color: light_blue

@@ -1,0 +1,76 @@
+resources: !- $import('resources.yaml')
+icon_glyphs: !- $_.resources.icon_glyphs
+
+id: page_wifi_info
+bg_color: black
+widgets:
+    - obj:
+        styles: [layout_box, main_layout]
+        pad_bottom: 10
+        layout:
+          type: GRID
+          grid_columns: [FR(1)]
+          grid_rows: [FR(7), FR(5), FR(7), FR(5), FR(7), FR(5), FR(7)]
+        widgets:
+          - label:
+              text: "SSID"
+              text_font: my_font22
+              text_color: light_blue
+              grid_cell_x_align: CENTER
+              grid_cell_row_pos: 0
+              grid_cell_column_pos: 0
+          - label:
+              text: !lambda return id(connected_ssid).state.c_str();
+              text_font: my_font18
+              text_color: yellow
+              grid_cell_x_align: CENTER
+              grid_cell_row_pos: 1
+              grid_cell_column_pos: 0
+          - label:
+              text: "BSSID"
+              text_font: my_font22
+              text_color: light_blue
+              grid_cell_x_align: CENTER
+              grid_cell_row_pos: 2
+              grid_cell_column_pos: 0
+          - label:
+              text: !lambda return id(connected_bssid).state.c_str();
+              text_font: my_font18
+              text_color: yellow
+              grid_cell_x_align: CENTER
+              grid_cell_row_pos: 3
+              grid_cell_column_pos: 0
+          - label:
+              text: "Device MAC"
+              text_font: my_font22
+              text_color: light_blue
+              grid_cell_x_align: CENTER
+              grid_cell_row_pos: 4
+              grid_cell_column_pos: 0
+          - label:
+              text: !lambda return id(device_mac).state.c_str();
+              text_font: my_font18
+              text_color: yellow
+              grid_cell_x_align: CENTER
+              grid_cell_row_pos: 5
+              grid_cell_column_pos: 0
+          - obj:
+              grid_cell_row_pos: 6
+              grid_cell_column_pos: 0
+              styles: [layout_box]
+              grid_cell_y_align: STRETCH
+              grid_cell_x_align: STRETCH
+              pad_left: 10
+              pad_right: 10
+              layout:
+                type: FLEX
+                flex_flow: ROW
+              widgets:
+                - label:
+                    text: "Signal Strength"
+                    text_font: my_font22
+                    text_color: light_blue
+                - label:
+                    text: !lambda return str_sprintf("%4.f%%", id(wifi_percent).state);
+                    text_font: my_font22
+                    text_color: yellow

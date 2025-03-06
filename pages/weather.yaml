@@ -1,0 +1,34 @@
+resources: !- $import('resources.yaml')
+icon_glyphs: !- $_.resources.icon_glyphs
+
+id: page_weather
+bg_color: black
+widgets:
+  - obj:
+      align: BOTTOM_MID
+      styles: [layout_box, main_layout]
+      layout:
+        type: GRID
+        grid_columns: [FR(1)]
+        grid_rows: [10, 170]
+      on_click:
+        - lambda: |-
+            draw_weather_chart(weather_chart_obj);
+      widgets:
+        - label:
+            text: "Thu 6 Mar 2025"
+            text_font: my_font22
+            text_color: light_blue
+            grid_cell_x_align: CENTER
+            grid_cell_row_pos: 0
+            grid_cell_column_pos: 0
+        - obj:
+            id: weather_chart_obj
+            styles: [layout_box]
+            grid_cell_x_align: STRETCH
+            grid_cell_y_align: STRETCH
+            grid_cell_row_pos: 1
+            grid_cell_column_pos: 0
+            widgets:
+              - label:
+                  text: !lambda '{draw_weather_chart(weather_chart_obj); return "";}'

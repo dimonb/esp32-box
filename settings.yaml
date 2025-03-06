@@ -220,7 +220,7 @@ script:
             - lambda: id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
             - delay: !lambda return id(s_saver_delay).state * 1000;
             - lambda: id(led).turn_on().set_brightness(id(s_saver_brightness).state /100).perform();
-            - display.page.show: saver_page
+            #- display.page.show: saver_page
             - component.update: s3_box_lcd
       - if:
           condition:
@@ -237,7 +237,7 @@ script:
             - switch.is_on: s_saver 
           then:
             - lambda: id(led).turn_on().set_brightness(id(s_saver_brightness).state /100).perform();
-            - display.page.show: saver_page
+            #- display.page.show: saver_page
             - component.update: s3_box_lcd
       - if:
           condition:

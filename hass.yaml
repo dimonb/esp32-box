@@ -48,7 +48,14 @@ sensor:
     entity_id: sensor.co2_bedroom
     internal: True
     on_value:
-      component.update: s3_box_lcd
+      - lvgl.label.update:
+          id: co2_bedroom_status
+          text: !lambda return str_sprintf("%4.0f", id(co2_bedroom).state);
+          text_color: !lambda return co2_color(id(co2_bedroom).state);
+      - lvgl.label.update:
+          id: co2_bedroom_icon
+          text_color: !lambda return co2_color(id(co2_bedroom).state);
+      - component.update: s3_box_lcd
 
 
   - platform: homeassistant
@@ -56,7 +63,13 @@ sensor:
     entity_id: sensor.sensor_temp02_temperature
     internal: True
     on_value:
-      component.update: s3_box_lcd
+      - lvgl.label.update:
+          id: temp_bedroom_status
+          text: 
+            format: "%2.1f°"
+            args: [id(temperature_bedroom).state]
+          
+      - component.update: s3_box_lcd
 
 
   # - !for list(0, 1, 2, 3, 4): !()

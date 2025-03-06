@@ -36,11 +36,14 @@ image:
 icon_glyphs: !- $_.resources.icon_glyphs
 
 font:
-  - !for $_.resources.font.where($.id = "icon_font_25" or $.id = "my_font22" or $.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75"): !()
+  - !for $_.resources.font.where($.id = "icon_font_25" or $.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75" or $.id = "icon_font_60"): !()
     - !? $.mergeWith(dict("bpp" => 1))
   - !for $_.resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
     - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
-
+  - !for $_.resources.font.where($.id = "my_font18" or $.id = "my_font22"): !()
+    - !? $.mergeWith(dict("bpp" => 4))
+  - !for $_.resources.font.where($.id = "icon_font_15"): !()
+    - !? $.mergeWith(dict("bpp" => 8))
 lvgl:
   displays:
     - s3_box_lcd
@@ -49,8 +52,10 @@ lvgl:
   top_layer: !? $import('pages/top_layer.yaml')
 
   pages:
-    - !? $import('pages/page_main.yaml')
-    - !? $import('pages/page_settings.yaml')
+    - !? $import('pages/main.yaml')
+    - !? $import('pages/settings.yaml')
+    - !? $import('pages/wifi_info.yaml')
+    - !? $import('pages/weather.yaml')
 
   style_definitions: !? $import('pages/styles.yaml')
 
@@ -74,23 +79,30 @@ http_request:
 
 script:   
   - !for $_.settings.script: !()
-    - !? $.delete("then").mergeWith(dict("then" => []))
+    - !? $ 
+  # - !for $_.lvgl.top_layer.script: !()
+  #   - !? $
 
 esphome:
   name: test-esp32-device
   friendly_name: test-esp32-device
   platformio_options:
-    board_build.partitions: partitions.csv
+    build_flags:
+       - -D LV_USE_CHART=1
   on_boot:
     priority: 600
     then:
       - lambda: |-
           id(time_display_format).publish_state("24 Hr");
           id(temperature_bedroom).publish_state(21.2);
-          id(co2_bedroom).publish_state(1200);
+          id(co2_bedroom).publish_state(600);
           id(openweathermap_condition).publish_state("cloudy");
           id(openweathermap_temperature).publish_state(18.0);
       - component.update: s3_box_lcd
+  includes:
+    - helpers.h
+
+  
 
 esp32:
   board: esp32s3box
@@ -179,12 +191,43 @@ display:
 
 
 sensor:
+  - platform: copy 
+    source_id: wifi_signal_db
+    name: "WiFi Signal"
+    id: wifi_percent
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""   
+
+  - platform: wifi_signal
+    name: "WiFi db"
+    id: wifi_signal_db
+    update_interval: 30s
+
   - !for $_.hass.sensor: !()
-    - !? '$.delete("entity_id").delete("on_value").delete("attribute").mergeWith(dict("platform" => "template"))'
+    - !? '$.delete("entity_id").delete("attribute").mergeWith(dict("platform" => "template"))'
 
 text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: IP Address
+      id: ip_addr
+      entity_category: "diagnostic"
+    ssid:
+      id: connected_ssid
+      name: SSID
+      entity_category: "diagnostic"
+    bssid:
+      id: connected_bssid
+      name: BSSID
+      entity_category: "diagnostic"
+    mac_address:
+      id: device_mac
+
   - !for $_.hass.text_sensor: !()
-    - !? '$.delete("entity_id").delete("on_value").delete("attribute").mergeWith(dict("platform" => "template"))'
+    - !? '$.delete("entity_id").delete("attribute").mergeWith(dict("platform" => "template"))'
 
   - platform: template
     id: time_display_format
