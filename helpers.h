@@ -50,18 +50,70 @@ std::string get_weather_icon(const std::string &condition) {
   }    
 }
 
-std::vector<lv_point_t> get_weather_points() {
-  return {
-    {5, 5},
-    {70, 70},
-    {120, 10},
-  };
+std::string get_weather_icon(int code, bool is_day) {
+    if (!is_day) {
+        if (code == 0) return "\U000F0594";  // Clear sky -> weather_night
+        if (code >= 1 && code <= 3) return "\U000F0F31";  // Partly cloudy -> weather_night_partly_cloudy
+        if (code == 45 || code == 48) return "\U000F0591";  // Fog -> weather_fog
+        if (code >= 51 && code <= 55) return "\U000F0597";  // Drizzle -> weather_rainy
+        if (code >= 56 && code <= 57) return "\U000F0592";  // Freezing Drizzle -> weather_hail
+        if (code >= 61 && code <= 65) return "\U000F0596";  // Rain -> weather_pouring
+        if (code >= 66 && code <= 67) return "\U000F0592";  // Freezing Rain -> weather_hail
+        if (code >= 71 && code <= 75) return "\U000F0598";  // Snowfall -> weather_snowy
+        if (code == 77) return "\U000F0598";  // Snow grains -> weather_snowy
+        if (code >= 80 && code <= 82) return "\U000F0596";  // Rain showers -> weather_pouring
+        if (code == 85 || code == 86) return "\U000F0598";  // Snow showers -> weather_snowy
+        if (code == 95) return "\U000F0593";  // Thunderstorm -> weather_lightning
+        if (code == 96 || code == 99) return "\U000F0593";  // Thunderstorm with hail -> weather_lightning
+        return "\U000F0594";  // Default -> weather_night
+    }
+    if (code == 0) return "\U000F0599";  // Clear sky -> weather_sunny
+    if (code >= 1 && code <= 3) return "\U000F0595";  // Partly cloudy -> weather_partly_cloudy
+    if (code == 45 || code == 48) return "\U000F0591";  // Fog -> weather_fog
+    if (code >= 51 && code <= 55) return "\U000F0597";  // Drizzle -> weather_rainy
+    if (code >= 56 && code <= 57) return "\U000F0592";  // Freezing Drizzle -> weather_hail
+    if (code >= 61 && code <= 65) return "\U000F0596";  // Rain -> weather_pouring
+    if (code >= 66 && code <= 67) return "\U000F0592";  // Freezing Rain -> weather_hail
+    if (code >= 71 && code <= 75) return "\U000F0598";  // Snowfall -> weather_snowy
+    if (code == 77) return "\U000F0598";  // Snow grains -> weather_snowy
+    if (code >= 80 && code <= 82) return "\U000F0596";  // Rain showers -> weather_pouring
+    if (code == 85 || code == 86) return "\U000F0598";  // Snow showers -> weather_snowy
+    if (code == 95) return "\U000F0593";  // Thunderstorm -> weather_lightning
+    if (code == 96 || code == 99) return "\U000F0593";  // Thunderstorm with hail -> weather_lightning
+    return "\U000F0599";  // Default -> weather_sunny
 }
 
-static float points[24] = {3, 11.4, 12.1, 13.4, 23.4, 22.4, 25.4, 23.4, 23.4, 23.4, 23.4, 16.4, 
-                               std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN(),
-                               13.8, 13.4, std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN(),
-                               std::numeric_limits<float>::quiet_NaN(), 13.2, 11.5, 10.5, 9.5, 8.5};
+
+int get_day_number(int year, int month, int day) {
+    if (month < 3) {
+        month += 12;
+        year -= 1;
+    }
+    int K = year % 100;
+    int J = year / 100;
+    int h = (day + (13 * (month + 1)) / 5 + K + (K / 4) + (J / 4) + (5 * J)) % 7;
+    return ((h + 6) % 7); // Adjusting to 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+}
+std::string get_date_string(const std::string &date) {
+    static const char* days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+    int year = std::stoi(date.substr(0, 4));
+    int month = std::stoi(date.substr(5, 2));
+    int day = std::stoi(date.substr(8, 2));
+    int day_number = get_day_number(year, month, day);
+    std::string day_of_week = days[day_number];
+    std::string month_name = months[month - 1];
+    return day_of_week + " " + std::to_string(day) + " " + month_name + " " + std::to_string(year);
+}
+
+static StaticJsonDocument<64*1024> weather_data;
+static std::vector<float> points(24, std::numeric_limits<float>::quiet_NaN());
+static lv_obj_t *chart = nullptr;
+static lv_chart_series_t *ser1 = nullptr;
+static lv_obj_t* weather_icons[14] = {nullptr};
+static int current_show_day = 0;
+static char selectedDay[11] = {0};
 
 
 lv_color_t get_temperature_color(float value) {
@@ -107,6 +159,8 @@ lv_color_t get_temperature_color(float value) {
 
     return lv_color_make(red, green, blue);
 }
+
+
 
 void draw_event_cb(lv_event_t *e) {
     lv_obj_t *obj = lv_event_get_target(e);
@@ -154,9 +208,111 @@ void draw_event_cb(lv_event_t *e) {
     lv_draw_mask_remove_id(fade_mask_id);
 }
 
-static lv_obj_t *chart = nullptr;
-static lv_chart_series_t *ser1 = nullptr;
-static lv_obj_t* weather_icons[] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+
+void processWeatherData() {
+
+    // Validate JSON structure
+    if (!weather_data.containsKey("hourly") || 
+        !weather_data["hourly"].containsKey("time") || 
+        !weather_data["hourly"].containsKey("temperature_2m") ||
+        !weather_data["hourly"].containsKey("weather_code")) {
+        ESP_LOGI("weather", "Invalid Weather JSON structure\n");
+        return;
+    }
+
+    JsonArray timeArray = weather_data["hourly"]["time"];
+    JsonArray tempArray = weather_data["hourly"]["temperature_2m"];
+    JsonArray weatherCodeArray = weather_data["hourly"]["weather_code"];
+    JsonArray diffuseRadiationArray = weather_data["hourly"]["diffuse_radiation"];
+    
+    size_t dataSize = timeArray.size();
+    if (tempArray.size() != dataSize || !dataSize) {
+        ESP_LOGW("weather", "Invalid Weather JSON structure 2\n");
+        return;
+    }
+
+    ESP_LOGI("weather", "dataSize: %d, weatherCodeArray: %d, diffuseRadiationArray: %d", dataSize, weatherCodeArray.size(), diffuseRadiationArray.size());
+
+        // Find the requested day based on current_show_day
+    
+    int foundDays = 0;
+
+    for (size_t i = 0; i < dataSize; ++i) {
+        if (i == 0 || strncmp(timeArray[i], timeArray[i - 1], 10) != 0) {
+            if (foundDays == current_show_day) {
+                strncpy(selectedDay, timeArray[i], 10);
+                break;
+            }
+            foundDays++;
+        }
+    }
+    if (strlen(selectedDay) == 0) {
+        ESP_LOGW("weather", "Error: Could not find the selected day in data\n");
+        return;
+    }
+
+
+    std::map<int8_t, std::pair<int8_t, bool> > hourlyWeatherCodes;
+    for (size_t i = 0; i < dataSize; ++i) {
+        if (strncmp(timeArray[i], selectedDay, 10) == 0) {
+            const char* timestamp = timeArray[i].as<const char*>();  // Explicitly convert JSON string
+            //ESP_LOGI("weather", "timestamp: %s", timestamp);
+            if (timestamp) {
+                int hour = std::atoi(timestamp + 11);  // Extract hour from "YYYY-MM-DDTHH:MM"
+                if (hour >= 0 && hour < 24) {
+                    points[hour] = tempArray[i]; // Direct assignment
+                    hourlyWeatherCodes[hour] = std::make_pair(weatherCodeArray[i], diffuseRadiationArray[i] > 0.01);
+                    //ESP_LOGI("weather", "hour: %d, weather_code: %d, diffuse_radiation: %f", hour, hourlyWeatherCodes[hour].first, float(diffuseRadiationArray[i]));
+                }
+            }
+        }
+    }
+
+    // Interpolation logic
+    float v_prev = std::numeric_limits<float>::quiet_NaN();
+    int skip_count = 0;
+
+    lv_coord_t * ser1_points = ser1->y_points;
+    size_t ser1_points_size = lv_chart_get_point_count(chart);
+
+    for (int k = 0; k < ser1_points_size; ++k) {
+        if (!std::isnan(points[k])) {
+            for (int skip = 0; skip < skip_count; ++skip) {
+                if (std::isnan(v_prev)) {
+                    v_prev = points[k];
+                }
+                float med = (points[k] - v_prev) / (skip_count + 1);
+                float interpolated_value = round(v_prev + med * (skip + 1));
+                ser1_points[k-skip_count+skip] = interpolated_value;
+            }
+            skip_count = 0;
+            ser1_points[k] = round(points[k]);
+            v_prev = points[k];
+        } else {
+            skip_count++;
+        }
+    }
+
+    // Fill remaining missing values
+    for (int skip = 0; skip < skip_count; ++skip) {
+        ser1_points[ser1_points_size-skip_count+skip] = round(v_prev);
+    }
+
+    lv_chart_refresh(chart);
+
+    lv_label_set_text_fmt(weather_day_label, get_date_string(selectedDay).c_str());
+
+    for(int i = 0; i < 13; i++) {
+      int hour = (i == 12) ? 23 : i * 2;
+      if (hourlyWeatherCodes.find(hour) != hourlyWeatherCodes.end()) {  
+        lv_label_set_text_fmt(weather_icons[i], get_weather_icon(hourlyWeatherCodes[hour].first, hourlyWeatherCodes[hour].second).c_str());
+        lv_obj_set_style_text_color(weather_icons[i], lv_color_make(yellow), LV_PART_MAIN);
+      } else {
+        lv_label_set_text_fmt(weather_icons[i], "");
+      }
+    }
+}
+
 
 static void draw_weather_chart(lv_obj_t *obj) {
   if(chart == nullptr) {
@@ -176,47 +332,22 @@ static void draw_weather_chart(lv_obj_t *obj) {
     ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_SECONDARY_Y);
     //ser2 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_GREEN), LV_CHART_AXIS_SECONDARY_Y);
     lv_obj_add_event_cb(chart, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+    lv_obj_update_layout(chart);
     for(int i = 0; i < 13; i++) {
       weather_icons[i] = lv_label_create(obj);
       lv_obj_add_style(weather_icons[i], weather_small_icon, 0);
-      lv_obj_set_pos(weather_icons[i], 24 + i * 19, 10);
-      lv_label_set_text_fmt(weather_icons[i], get_weather_icon("clear-night").c_str());
+      lv_obj_update_layout(weather_icons[i]);
+      //ESP_LOGI("lvgl", "chart width: %d", );
+      lv_obj_set_x(weather_icons[i], lv_obj_get_x(chart) + lv_obj_get_x(weather_icons[i]) + i * lv_obj_get_width(chart) / 13);
+      //lv_obj_set_y(weather_icons[i], 10);
     }
   }
 
-  
-  // float max_t = *std::max_element(points, points + 24, safe_cmp);
-  // float min_t = *std::min_element(points, points + 24, safe_cmp);
-
-
-  float v_prev = std::numeric_limits<float>::quiet_NaN();
-  int skip_count = 0;
-
-  for (int k = 0; k < 24; ++k) {
-    if (!std::isnan(points[k])) {
-        for (int skip = 0; skip < skip_count; ++skip) {
-            if (std::isnan(v_prev)) {
-                v_prev = points[k];
-            }
-            float med = (points[k] - v_prev) / (skip_count + 1);
-            float interpolated_value = round(v_prev + med * (skip + 1));
-            lv_chart_set_next_value(chart, ser1, interpolated_value);
-        }
-        skip_count = 0;
-        lv_chart_set_next_value(chart, ser1, round(points[k]));
-        v_prev = points[k];
-    } else {
-        skip_count++;
-    }
-  }
-
-  for (int skip = 0; skip < skip_count; ++skip) {
-      lv_chart_set_next_value(chart, ser1, round(v_prev));
-  }
+  processWeatherData();
   
   auto _cmp = [](float a, float b) { return !(std::isnan(a)) && (std::isnan(b) || a < b); };
-  float max_t = *std::max_element(points, points + 24, _cmp);
-  float min_t = *std::min_element(points, points + 24, _cmp);
+  float max_t = *std::max_element(points.begin(), points.end(), _cmp);
+  float min_t = *std::min_element(points.begin(), points.end(), _cmp);
 
   min_t = std::min(static_cast<int>(min_t / 5) * 5, 0);
   max_t = min_t + std::max(static_cast<int>((max_t - min_t) / 5) * 5 + 5, 35);

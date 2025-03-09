@@ -38,7 +38,7 @@
   text_align: CENTER
   grid_cell_x_align: STRETCH
   grid_cell_y_align: CENTER
-  height: 33
+  height: 30
 - id: toolbar_text
   text_color: light_blue
   text_font: my_font28
@@ -47,7 +47,6 @@
   text_align: CENTER
   grid_cell_x_align: STRETCH
   grid_cell_y_align: CENTER
-
 - id: weather_chart
   bg_color: black
   bg_opa: TRANSP
@@ -55,7 +54,14 @@
   width: 245
   height: 119
   x: 20
-  y: 30
+  y: 15
 - id: weather_small_icon
   text_font: icon_font_15
   text_color: light_blue
+  y: 0
+  x: 3
+- id: weather_small_icon_button
+  bg_color: black
+  width: 22
+  height: 22
+  shadow_width: 0

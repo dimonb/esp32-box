@@ -36,13 +36,13 @@ image:
 icon_glyphs: !- $_.resources.icon_glyphs
 
 font:
-  - !for $_.resources.font.where($.id = "icon_font_25" or $.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75" or $.id = "icon_font_60"): !()
+  - !for $_.resources.font.where($.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75" or $.id = "icon_font_60"): !()
     - !? $.mergeWith(dict("bpp" => 1))
   - !for $_.resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
     - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
   - !for $_.resources.font.where($.id = "my_font18" or $.id = "my_font22"): !()
     - !? $.mergeWith(dict("bpp" => 4))
-  - !for $_.resources.font.where($.id = "icon_font_15"): !()
+  - !for $_.resources.font.where($.id = "icon_font_15" or $.id = "icon_font_25"): !()
     - !? $.mergeWith(dict("bpp" => 8))
 lvgl:
   displays:
@@ -98,6 +98,7 @@ esphome:
           id(co2_bedroom).publish_state(600);
           id(openweathermap_condition).publish_state("cloudy");
           id(openweathermap_temperature).publish_state(18.0);
+          
       - component.update: s3_box_lcd
   includes:
     - helpers.h
@@ -117,12 +118,40 @@ external_components:
       ref: dev-next
     components: [ adf_pipeline, i2s_audio ]
     refresh: 0s  
-
+  - source:  github://dimonb/esphome@dev
+    components: [ http_request]
 
 
 wifi:
+  on_connect:
+    - lambda: |-
+        ESP_LOGI("lvgl", "Connected to WiFi");
+    - http_request.get:
+        url: "http://api.open-meteo.com/v1/forecast?latitude=32.79920904119136&longitude=34.97237608011288&past_days=1&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation_probability,diffuse_radiation&timezone=auto&forecast_days=11"
+        capture_response: true
+        max_response_buffer_size: 32768
+        on_response: 
+          then:
+            - if:
+                condition:
+                    lambda: return response->status_code == 200;
+                then:
+                    - lambda: |-
+                        ESP_LOGI("lvgl", "Response size: %d", body.size());
+                    - lambda: |-
+                        json::parse_json(body, [](JsonObject root) -> bool {
+                            weather_data.set(root);
+                            return true;
+                        });
+                else:
+                    - logger.log:
+                        format: "Error: Response status: %d, message %s"
+                        args: [ 'response->status_code', 'body.c_str()' ]
+
   ssid: "Wokwi-GUEST"
   ap:
+    ssid: ${name}
+    password: s3box123
 
 
 ota:

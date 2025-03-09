@@ -94,10 +94,12 @@ icon_glyphs: !-
   weather_sunset_up: "\U000F059C"
   weather_windy: "\U000F059D"
   weather_windy_variant: "\U000F059E"
+  weather_night_partly_cloudy: "\U000F0F31"
   wifi_75: "\U000F0925"
   wifi_50: "\U000F0922"
   wifi_25: "\U000F091F"
-
+  arrow_left: "\U000F0052"
+  arrow_right: "\U000F0059"
 
 image:
   - file: "https://github.com/BigBobbas/ESP32-S3-Box3-Custom-ESPHome/raw/main/images/error.png"

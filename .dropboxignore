@@ -10,3 +10,8 @@ secrets.yaml
 *tmp
 esp32-s3-box-3-5aac68.yaml
 # ----
+# Automatically updated .dropboxignore file at "Sun Mar  9 13:19:16 IST 2025"
+# ----
+*copy*yaml
+*.bin
+# ----

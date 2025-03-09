@@ -69,6 +69,10 @@ widgets:
                     on_click:
                       - lambda: |-
                           ESP_LOGI("page_main", "Weather button clicked");
+
+                      - lambda: |-
+                          current_show_day = 1;
+                          draw_weather_chart(weather_chart_obj);
                       - lvgl.page.show: page_weather
                     widgets:
                       - label:
