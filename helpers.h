@@ -51,38 +51,37 @@ std::string get_weather_icon(const std::string &condition) {
 }
 
 std::string get_weather_icon(int code, bool is_day) {
-    if (!is_day) {
-        if (code == 0) return "\U000F0594";  // Clear sky -> weather_night
-        if (code >= 1 && code <= 3) return "\U000F0F31";  // Partly cloudy -> weather_night_partly_cloudy
-        if (code == 45 || code == 48) return "\U000F0591";  // Fog -> weather_fog
-        if (code >= 51 && code <= 55) return "\U000F0597";  // Drizzle -> weather_rainy
-        if (code >= 56 && code <= 57) return "\U000F0592";  // Freezing Drizzle -> weather_hail
-        if (code >= 61 && code <= 65) return "\U000F0596";  // Rain -> weather_pouring
-        if (code >= 66 && code <= 67) return "\U000F0592";  // Freezing Rain -> weather_hail
-        if (code >= 71 && code <= 75) return "\U000F0598";  // Snowfall -> weather_snowy
-        if (code == 77) return "\U000F0598";  // Snow grains -> weather_snowy
-        if (code >= 80 && code <= 82) return "\U000F0596";  // Rain showers -> weather_pouring
-        if (code == 85 || code == 86) return "\U000F0598";  // Snow showers -> weather_snowy
-        if (code == 95) return "\U000F0593";  // Thunderstorm -> weather_lightning
-        if (code == 96 || code == 99) return "\U000F0593";  // Thunderstorm with hail -> weather_lightning
-        return "\U000F0594";  // Default -> weather_night
-    }
-    if (code == 0) return "\U000F0599";  // Clear sky -> weather_sunny
-    if (code >= 1 && code <= 3) return "\U000F0595";  // Partly cloudy -> weather_partly_cloudy
-    if (code == 45 || code == 48) return "\U000F0591";  // Fog -> weather_fog
-    if (code >= 51 && code <= 55) return "\U000F0597";  // Drizzle -> weather_rainy
-    if (code >= 56 && code <= 57) return "\U000F0592";  // Freezing Drizzle -> weather_hail
-    if (code >= 61 && code <= 65) return "\U000F0596";  // Rain -> weather_pouring
-    if (code >= 66 && code <= 67) return "\U000F0592";  // Freezing Rain -> weather_hail
-    if (code >= 71 && code <= 75) return "\U000F0598";  // Snowfall -> weather_snowy
-    if (code == 77) return "\U000F0598";  // Snow grains -> weather_snowy
-    if (code >= 80 && code <= 82) return "\U000F0596";  // Rain showers -> weather_pouring
-    if (code == 85 || code == 86) return "\U000F0598";  // Snow showers -> weather_snowy
-    if (code == 95) return "\U000F0593";  // Thunderstorm -> weather_lightning
-    if (code == 96 || code == 99) return "\U000F0593";  // Thunderstorm with hail -> weather_lightning
-    return "\U000F0599";  // Default -> weather_sunny
+    // Day/night specific cases
+    if (code == 0) return is_day ? "\U000F0599" : "\U000F0594";
+    if (code >= 1 && code <= 3) return is_day ? "\U000F0595" : "\U000F0F31";
+
+    // Common cases for both day and night
+    if (code == 45 || code == 48) return "\U000F0591";
+    if (code >= 51 && code <= 55) return "\U000F0597";
+    if ((code >= 56 && code <= 57) || (code >= 66 && code <= 67)) return "\U000F0592";
+    if ((code >= 61 && code <= 65) || (code >= 80 && code <= 82)) return "\U000F0596";
+    if ((code >= 71 && code <= 75) || code == 77 || code == 85 || code == 86) return "\U000F0598";
+    if (code == 95 || code == 96 || code == 99) return "\U000F0593";
+
+    // Default case (same as clear sky)
+    return is_day ? "\U000F0599" : "\U000F0594";
 }
 
+lv_color_t get_weather_icon_color(int code, bool is_day) {
+    if (!is_day) {
+        return lv_color_make(id(blue)); // Blue for night
+    }
+    
+    if (code == 0 || (code >= 1 && code <= 3)) {
+        return lv_color_make(id(yellow)); // Yellow for sun-related conditions
+    }
+    
+    if (code == 95 || code == 96 || code == 99) {
+        return lv_color_make(id(red)); // Red for thunderstorms
+    }
+
+    return lv_color_make(id(white)); // White for other daytime conditions
+}
 
 int get_day_number(int year, int month, int day) {
     if (month < 3) {
@@ -306,7 +305,7 @@ void processWeatherData() {
       int hour = (i == 12) ? 23 : i * 2;
       if (hourlyWeatherCodes.find(hour) != hourlyWeatherCodes.end()) {  
         lv_label_set_text_fmt(weather_icons[i], get_weather_icon(hourlyWeatherCodes[hour].first, hourlyWeatherCodes[hour].second).c_str());
-        lv_obj_set_style_text_color(weather_icons[i], lv_color_make(yellow), LV_PART_MAIN);
+        lv_obj_set_style_text_color(weather_icons[i], get_weather_icon_color(hourlyWeatherCodes[hour].first, hourlyWeatherCodes[hour].second), LV_PART_MAIN);
       } else {
         lv_label_set_text_fmt(weather_icons[i], "");
       }

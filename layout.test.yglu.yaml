@@ -26,7 +26,10 @@ touch: !- $import('touch.yaml')
 #render: !- '$_.touch.rendered_pages[0].where($.id = "idle_page").first().lambda'
 #render: !- '$_.touch.rendered_pages[0].where($.id = "weather_forecast_page").first().lambda'
 
+top_layer: !- $import('pages/top_layer.yaml')
+weather: !- $import('pages/weather.yaml')
 resources: !- $import('pages/resources.yaml')
+main: !- $import('pages/main.yaml')
 #image: !? $_.resources.image
 
 image:
@@ -55,7 +58,7 @@ lvgl:
     - !? $import('pages/main.yaml')
     - !? $import('pages/settings.yaml')
     - !? $import('pages/wifi_info.yaml')
-    - !? $import('pages/weather.yaml')
+    - !? $_.weather
 
   style_definitions: !? $import('pages/styles.yaml')
 
@@ -77,6 +80,29 @@ http_request:
   timeout: 10s
   verify_ssl: false
 
+
+time:
+  - platform: sntp
+    id: ha_time
+    timezone: Asia/Jerusalem
+    servers:
+     - 0.pool.ntp.org
+     - 1.pool.ntp.org
+     - 2.pool.ntp.org
+    on_time_sync:
+      - lambda: |-
+          ESP_LOGI("lvgl", "Time synced %s", id(ha_time).now().strftime("%H:%M").c_str());
+      - !? $_.main.time_update.action
+      - !? $_.main.date_update.action
+    on_time:
+      - minutes: '*'
+        seconds: 0
+        then:
+          - lambda: |-
+              ESP_LOGI("lvgl", "Time updated %s", id(ha_time).now().strftime("%H:%M").c_str());
+          - !? $_.main.time_update.action
+          - !? $_.main.date_update.action
+    
 script:   
   - !for $_.settings.script: !()
     - !? $ 
@@ -126,27 +152,16 @@ wifi:
   on_connect:
     - lambda: |-
         ESP_LOGI("lvgl", "Connected to WiFi");
-    - http_request.get:
-        url: "http://api.open-meteo.com/v1/forecast?latitude=32.79920904119136&longitude=34.97237608011288&past_days=1&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation_probability,diffuse_radiation&timezone=auto&forecast_days=11"
-        capture_response: true
-        max_response_buffer_size: 32768
-        on_response: 
-          then:
-            - if:
-                condition:
-                    lambda: return response->status_code == 200;
-                then:
-                    - lambda: |-
-                        ESP_LOGI("lvgl", "Response size: %d", body.size());
-                    - lambda: |-
-                        json::parse_json(body, [](JsonObject root) -> bool {
-                            weather_data.set(root);
-                            return true;
-                        });
-                else:
-                    - logger.log:
-                        format: "Error: Response status: %d, message %s"
-                        args: [ 'response->status_code', 'body.c_str()' ]
+    - lambda: |-
+        id(wifi_connection) = true;
+    - !? $_.top_layer.wifi_status_update.action
+    - !? $_.weather.weather_update_data.action
+  on_disconnect:
+    - lambda: |-
+        ESP_LOGI("lvgl", "Disconnected from WiFi");
+    - lambda: |-
+        id(wifi_connection) = false;
+    - !? $_.top_layer.wifi_status_update.action
 
   ssid: "Wokwi-GUEST"
   ap:
@@ -159,6 +174,17 @@ ota:
 api:
   encryption:
     key: !secret esphome_api_key
+
+  on_client_connected:
+    - lambda: |-
+        ESP_LOGI("lvgl", "Client connected to API");
+        id(api_connection) = true;
+    - !? $_.top_layer.api_status_update.action
+  on_client_disconnected:
+    - lambda: |-
+        ESP_LOGI("lvgl", "Client disconnected from API");
+        id(api_connection) = false;
+    - !? $_.top_layer.api_status_update.action
 
 time:
   - platform: homeassistant
@@ -273,6 +299,12 @@ text_sensor:
 
   
 binary_sensor:
+  - platform: tt21100
+    id: home_button
+    index: 0
+    on_press:
+      - lvgl.page.show: page_main
+
   - !for $_.hass.binary_sensor: !()
     - !? $
 

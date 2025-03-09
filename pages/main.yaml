@@ -1,6 +1,36 @@
 resources: !- $import('resources.yaml')
 icon_glyphs: !- $_.resources.icon_glyphs
 
+
+time_update: !-
+  text:
+    format: "%s"
+    args:
+      - !? '"id(ha_time).now().strftime(\"%H:%M\").c_str()"'
+  action:
+    lvgl.label.update:
+      id: label_clock
+      text: !? $_.time_update.text
+
+date_update: !-
+  text:
+    format: "%s"
+    args:
+      - !? '"id(ha_time).now().strftime(\"%a %d %b\").c_str()"'
+  action:
+    lvgl.label.update:
+      id: label_date
+      text: !? $_.date_update.text
+
+
+button_light_update: !-
+  text_color: !lambda |-
+    return id(bedroom_light).state ? lv_color_make(id(yellow)) : lv_color_make(id(blue));
+  action:
+    lvgl.button.update:
+      id: button_light
+      text_color: !? $_.button_light_update.text_color
+
 id: page_main
 bg_color: black
 widgets:
@@ -14,7 +44,7 @@ widgets:
         widgets:
           - label:
               id: label_clock
-              text: !lambda return id(ha_time).now().strftime("%H:%M");
+              text: !? $_.time_update.text
               text_font: my_font82
               text_color: white
               grid_cell_row_pos: 0
@@ -23,7 +53,7 @@ widgets:
               grid_cell_y_align: STRETCH
           - label:
               id: label_date
-              text: !lambda return id(ha_time).now().strftime("%a %d %b");
+              text: !? $_.date_update.text
               text_font: my_font22
               text_color: white
               grid_cell_row_pos: 1
@@ -60,9 +90,14 @@ widgets:
                     on_click:
                       - lambda: |-
                           ESP_LOGI("page_main", "Light button clicked");
+                      - homeassistant.service:
+                          service: light.toggle
+                          data:
+                            entity_id: light.pw_switch02
                     widgets:
                       - label:
                           text: !? $_.icon_glyphs.light_on
+                    text_color: !? $_.button_light_update.text_color
                 - button:
                     id: button_weather
                     styles: [main_page_button]

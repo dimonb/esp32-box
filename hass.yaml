@@ -1,3 +1,5 @@
+main: !- $import('pages/main.yaml')
+
 text_sensor:
   - platform: homeassistant
     name: "Weather Condition"
@@ -96,4 +98,8 @@ binary_sensor:
   - platform: homeassistant
     id: bedroom_light
     entity_id: light.pw_switch02
+    on_state:
+      - lambda: |-
+          ESP_LOGI("bedroom_light", "Bedroom light state: %s", id(bedroom_light).state ? "on" : "off");
+      - !? $_.main.button_light_update.action
 

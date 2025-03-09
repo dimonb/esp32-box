@@ -10,6 +10,32 @@ mic_status_update: !-
     args:
       - !? '"id(mute_switch).state ? \"" + $_.icon_glyphs.mic_off + "\" : \"" + $_.icon_glyphs.mic_on + "\""'
 
+wifi_status_update: !-
+  text_color: !lambda |-
+      return id(wifi_connection) ? lv_color_make(id(green)) : lv_color_make(id(red));
+  text: 
+    format: "%s"
+    args:
+      - !? '"id(wifi_connection) ? \"" + $_.icon_glyphs.wifi_connected + "\" : \"" + $_.icon_glyphs.wifi_disconnected + "\""'
+  action:
+    lvgl.label.update:
+        id: wifi_status
+        text_color: !? $_.wifi_status_update.text_color
+        text: !? $_.wifi_status_update.text
+
+api_status_update: !-
+  text_color: !lambda |-
+      return id(api_connection) ? lv_color_make(id(green)) : lv_color_make(id(red));
+  text: 
+    format: "%s"
+    args:
+      - !? '"id(api_connection) ? \"" + $_.icon_glyphs.api_connected + "\" : \"" + $_.icon_glyphs.api_disconnected + "\""'
+  action:
+    lvgl.label.update:
+        id: api_status
+        text_color: !? $_.api_status_update.text_color
+        text: !? $_.api_status_update.text
+
 widgets:
   - obj:
       x: 4
@@ -26,15 +52,23 @@ widgets:
         - label:
             id: api_status
             styles: [toolbar_icon]
-            text: !? $_.icon_glyphs.api_connected
+            text: !? $_.api_status_update.text
+            text_color: !? $_.api_status_update.text_color
             grid_cell_column_pos: 0
             grid_cell_row_pos: 0
             on_click:
-              - lvgl.page.show: settings_page
+              - if:
+                  condition:
+                    - lvgl.page.is_showing: page_settings
+                  then:
+                    - lvgl.page.show: page_main
+                  else:
+                    - lvgl.page.show: page_settings
         - label:
             id: wifi_status
             styles: [toolbar_icon]
-            text: !? $_.icon_glyphs.wifi_connected
+            text: !? $_.wifi_status_update.text
+            text_color: !? $_.wifi_status_update.text_color 
             grid_cell_column_pos: 1
             grid_cell_row_pos: 0
             on_click:

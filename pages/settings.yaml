@@ -1,7 +1,7 @@
 resources: !- $import('resources.yaml')
 icon_glyphs: !- $_.resources.icon_glyphs
 
-id: settings_page
+id: page_settings
 bg_color: black
 widgets:
   - obj:
