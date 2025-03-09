@@ -27,25 +27,25 @@ touch: !- $import('touch.yaml')
 #render: !- '$_.touch.rendered_pages[0].where($.id = "weather_forecast_page").first().lambda'
 
 top_layer: !- $import('pages/top_layer.yaml')
-weather: !- $import('pages/weather.yaml')
-resources: !- $import('pages/resources.yaml')
-main: !- $import('pages/main.yaml')
+page_weather: !- $import('pages/weather.yaml')
+page_resources: !- $import('pages/resources.yaml')
+page_main: !- $import('pages/main.yaml')
 #image: !? $_.resources.image
 
 image:
-  - !for $_.resources.image.where($.id = "logo_img"): !()
+  - !for $_.page_resources.image.where($.id = "logo_img"): !()
     - !? $
 
-icon_glyphs: !- $_.resources.icon_glyphs
+icon_glyphs: !- $_.page_resources.icon_glyphs
 
 font:
-  - !for $_.resources.font.where($.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75" or $.id = "icon_font_60"): !()
+  - !for $_.page_resources.font.where($.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75" or $.id = "icon_font_60"): !()
     - !? $.mergeWith(dict("bpp" => 1))
-  - !for $_.resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
+  - !for $_.page_resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
     - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
-  - !for $_.resources.font.where($.id = "my_font18" or $.id = "my_font22"): !()
+  - !for $_.page_resources.font.where($.id = "my_font18" or $.id = "my_font22"): !()
     - !? $.mergeWith(dict("bpp" => 4))
-  - !for $_.resources.font.where($.id = "icon_font_15" or $.id = "icon_font_25"): !()
+  - !for $_.page_resources.font.where($.id = "icon_font_15" or $.id = "icon_font_25"): !()
     - !? $.mergeWith(dict("bpp" => 8))
 lvgl:
   displays:
@@ -58,12 +58,12 @@ lvgl:
     - !? $import('pages/main.yaml')
     - !? $import('pages/settings.yaml')
     - !? $import('pages/wifi_info.yaml')
-    - !? $_.weather
+    - !? $_.page_weather
 
   style_definitions: !? $import('pages/styles.yaml')
 
 
-color: !? $_.resources.color
+color: !? $_.page_resources.color
 
 
 hass: !- $import('hass.yaml')
@@ -92,20 +92,22 @@ time:
     on_time_sync:
       - lambda: |-
           ESP_LOGI("lvgl", "Time synced %s", id(ha_time).now().strftime("%H:%M").c_str());
-      - !? $_.main.time_update.action
-      - !? $_.main.date_update.action
+      - !? $_.page_main.time_update.action
+      - !? $_.page_main.date_update.action
     on_time:
       - minutes: '*'
         seconds: 0
         then:
           - lambda: |-
               ESP_LOGI("lvgl", "Time updated %s", id(ha_time).now().strftime("%H:%M").c_str());
-          - !? $_.main.time_update.action
-          - !? $_.main.date_update.action
+          - !? $_.page_main.time_update.action
+          - !? $_.page_main.date_update.action
     
 script:   
   - !for $_.settings.script: !()
     - !? $ 
+  - !for $_.page_weather.script: !()
+    - !? $
   # - !for $_.lvgl.top_layer.script: !()
   #   - !? $
 
@@ -155,7 +157,7 @@ wifi:
     - lambda: |-
         id(wifi_connection) = true;
     - !? $_.top_layer.wifi_status_update.action
-    - !? $_.weather.weather_update_data.action
+    - script.execute: weather_update_data
   on_disconnect:
     - lambda: |-
         ESP_LOGI("lvgl", "Disconnected from WiFi");

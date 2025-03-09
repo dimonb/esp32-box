@@ -2,29 +2,33 @@ resources: !- $import('resources.yaml')
 icon_glyphs: !- $_.resources.icon_glyphs
 
 
-weather_update_data: !-
-  action:
-    http_request.get:
-        url: "http://api.open-meteo.com/v1/forecast?latitude=32.79920904119136&longitude=34.97237608011288&past_days=1&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation_probability,diffuse_radiation&timezone=auto&forecast_days=11"
-        capture_response: true
-        max_response_buffer_size: 32768
-        on_response: 
-          then:
-            - if:
-                condition:
-                    lambda: return response->status_code == 200;
-                then:
-                    - lambda: |-
-                        ESP_LOGI("lvgl", "Response size: %d", body.size());
-                    - lambda: |-
-                        json::parse_json(body, [](JsonObject root) -> bool {
-                            weather_data.set(root);
-                            return true;
-                        });
-                else:
-                    - logger.log:
-                        format: "Error: Response status: %d, message %s"
-                        args: [ 'response->status_code', 'body.c_str()' ]
+script: !-
+  - id: weather_update_data
+    then:
+      - http_request.get:
+          url: "http://api.open-meteo.com/v1/forecast?latitude=32.79920904119136&longitude=34.97237608011288&past_days=1&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation_probability,diffuse_radiation&timezone=auto&forecast_days=11"
+          capture_response: true
+          max_response_buffer_size: 32768
+          on_response: 
+            then:
+              - if:
+                  condition:
+                      lambda: return response->status_code == 200;
+                  then:
+                      - lambda: |-
+                          ESP_LOGI("lvgl", "Response size: %d", body.size());
+                      - lambda: |-
+                          json::parse_json(body, [](JsonObject root) -> bool {
+                              weather_data.set(root);
+                              return true;
+                          });
+                  else:
+                      - logger.log:
+                          format: "Error: Response status: %d, message %s"
+                          args: [ 'response->status_code', 'body.c_str()' ]
+    mode: restart
+
+
 
 id: page_weather
 bg_color: black
