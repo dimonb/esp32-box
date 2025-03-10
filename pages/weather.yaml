@@ -16,7 +16,7 @@ script: !-
                       lambda: return response->status_code == 200;
                   then:
                       - lambda: |-
-                          ESP_LOGI("lvgl", "Response size: %d", body.size());
+                          ESP_LOGD("weather", "Response size: %d", body.size());
                       - lambda: |-
                           json::parse_json(body, [](JsonObject root) -> bool {
                               weather_data.set(root);

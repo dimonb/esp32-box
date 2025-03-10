@@ -8,7 +8,7 @@ substitutions: !? '$_.sub.delete("font_glyphs").mergeWith(dict("font_glyphs" => 
 json:
 
   
-touch: !- $import('touch.yaml')
+#touch: !- $import('touch.yaml')
 
 # add: !-
 #   lambda: |
@@ -122,8 +122,8 @@ esphome:
     then:
       - lambda: |-
           id(time_display_format).publish_state("24 Hr");
-          id(temperature_bedroom).publish_state(21.2);
-          id(co2_bedroom).publish_state(600);
+          id(temperature_bedroom).publish_state(22.9);
+          id(co2_bedroom).publish_state(947);
           id(openweathermap_condition).publish_state("cloudy");
           id(openweathermap_temperature).publish_state(18.0);
           

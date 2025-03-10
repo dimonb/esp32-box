@@ -98,24 +98,15 @@ widgets:
       styles: [layout_box]
       width: SIZE_CONTENT
       height: 35
-      layout:
-        pad_column: 3
-        type: GRID
-        grid_columns: [CONTENT, CONTENT, CONTENT]
-        grid_rows: [FR(1)]
       widgets:
         - label:
             id: temp_bedroom_status
             styles: [toolbar_text]
-            text: 
-            grid_cell_column_pos: 0
-            grid_cell_row_pos: 0
+            text: ""
         - label:
             id: co2_bedroom_status
             styles: [toolbar_text]
-            text: 
-            grid_cell_column_pos: 1
-            grid_cell_row_pos: 0
+            text: ""
             grid_cell_y_align: CENTER
         - label:
             id: co2_bedroom_icon
@@ -125,7 +116,5 @@ widgets:
             width: 20
             pad_right: 2
             text: !? $_.icon_glyphs.co2
-            grid_cell_column_pos: 2
-            grid_cell_row_pos: 0
             grid_cell_y_align: END
             

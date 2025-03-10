@@ -85,14 +85,14 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config  
-    on_turn_on: 
-      media_player.volume_set:    
-        id: adf_media_player
-        volume: 0    
-    on_turn_off: 
-      media_player.volume_set:    
-        id: adf_media_player
-        volume: 1.0 
+    # on_turn_on: 
+    #   media_player.volume_set:    
+    #     id: adf_media_player
+    #     volume: 0    
+    # on_turn_off: 
+    #   media_player.volume_set:    
+    #     id: adf_media_player
+    #     volume: 1.0 
       
   - platform: template
     name: Mute
@@ -101,42 +101,46 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
-    on_turn_on:
-      then:
-        - voice_assistant.stop
-        - micro_wake_word.stop
-    on_turn_off:
-      - if:
-          condition:
-            not:
-              - voice_assistant.is_running
-          then:
-            - if:
-                condition:
-                  lambda: return id(wake_word_engine_location).state == "In Home Assistant";
-                then:
-                  - lambda: id(va).set_use_wake_word(true);
-                  - delay: 50ms
-                  - voice_assistant.start_continuous
-            - if:
-                condition:
-                  lambda: return id(wake_word_engine_location).state == "On device";
-                then:
-                  - lambda: id(va).set_use_wake_word(false);
-                  - micro_wake_word.start
-            - component.update: s3_box_lcd
+    # on_turn_on:
+    #   then:
+    #     - logger.log:
+    #         format: "Mute switch turned on"
+        # - voice_assistant.stop
+        # - micro_wake_word.stop
+    # on_turn_off:
+    #   - logger.log:
+    #       format: "Mute switch turned off"
+      # - if:
+      #     condition:
+      #       not:
+      #         - voice_assistant.is_running
+      #     then:
+      #       - if:
+      #           condition:
+      #             lambda: return id(wake_word_engine_location).state == "In Home Assistant";
+      #           then:
+      #             - lambda: id(va).set_use_wake_word(true);
+      #             - delay: 50ms
+      #             - voice_assistant.start_continuous
+      #       - if:
+      #           condition:
+      #             lambda: return id(wake_word_engine_location).state == "On device";
+      #           then:
+      #             - lambda: id(va).set_use_wake_word(false);
+      #             - micro_wake_word.start
+      #       - component.update: s3_box_lcd
 
   - platform: template
     id: media_mute
     optimistic: true
-    on_turn_on:   
-      media_player.volume_set:    
-        id: adf_media_player
-        volume: 0
-    on_turn_off:
-      media_player.volume_set: 
-        id: adf_media_player
-        volume: 1.0       
+    # on_turn_on:   
+    #   media_player.volume_set:    
+    #     id: adf_media_player
+    #     volume: 0
+    # on_turn_off:
+    #   media_player.volume_set: 
+    #     id: adf_media_player
+    #     volume: 1.0       
         
   - platform: template
     id: s_saver
@@ -159,12 +163,12 @@ switch:
     optimistic: true
     internal: true
     restore_mode: ALWAYS_OFF
-    on_turn_on:
-      - lambda: id(led).turn_on().set_brightness(1.0).perform();
-      - delay: 15min
-      - switch.turn_off: timer_ringing 
-    on_turn_off:
-      - media_player.stop
+    # on_turn_on:
+    #   - lambda: id(led).turn_on().set_brightness(1.0).perform();
+    #   - delay: 15min
+    #   - switch.turn_off: timer_ringing 
+    # on_turn_off:
+    #   - media_player.stop
       
   - platform: template
     id: wake_sound

@@ -162,40 +162,40 @@ voice_assistant:
               then:
                 - lambda: id(va).set_use_wake_word(true);
                 - voice_assistant.start      
-  on_timer_started:
-    - script.execute: timer_ending
-    - component.update: s3_box_lcd
-  on_timer_cancelled:
-    - lambda: id(time_remaining_0).publish_state ("0:00:00"); 
-    - component.update: s3_box_lcd
-  on_timer_updated:
-    - component.update: s3_box_lcd
-  on_timer_tick:
-    - lambda: |-
-        int seconds = timers[0].seconds_left;
-        int hours = seconds / 3600;
-        int minutes = (seconds % 3600) / 60;
-        seconds %= 60;
-        id(time_remaining_0).publish_state(str_sprintf("%d:%02d:%02d", hours, minutes, seconds)); 
-    - component.update: s3_box_lcd
-  on_timer_finished:
-    if: 
-      condition:
-        - switch.is_on: output_audio
-      then:
-        - switch.turn_on: timer_ringing
-        - script.execute: timer_started_external
-        - display.page.show: timer_finished_page
-        - component.update: s3_box_lcd
-      else:
-        - if:
-            condition:
-              - switch.is_off: output_audio
-            then:
-              - switch.turn_on: timer_ringing
-              - script.execute: timer_started
-              - display.page.show: timer_finished_page
-              - component.update: s3_box_lcd
+  # on_timer_started:
+  #   - script.execute: timer_ending
+  #   - component.update: s3_box_lcd
+  # on_timer_cancelled:
+  #   - lambda: id(time_remaining_0).publish_state ("0:00:00"); 
+  #   - component.update: s3_box_lcd
+  # on_timer_updated:
+  #   - component.update: s3_box_lcd
+  # on_timer_tick:
+  #   - lambda: |-
+  #       int seconds = timers[0].seconds_left;
+  #       int hours = seconds / 3600;
+  #       int minutes = (seconds % 3600) / 60;
+  #       seconds %= 60;
+  #       id(time_remaining_0).publish_state(str_sprintf("%d:%02d:%02d", hours, minutes, seconds)); 
+  #   - component.update: s3_box_lcd
+  # on_timer_finished:
+  #   if: 
+  #     condition:
+  #       - switch.is_on: output_audio
+  #     then:
+  #       - switch.turn_on: timer_ringing
+  #       - script.execute: timer_started_external
+  #       - display.page.show: timer_finished_page
+  #       - component.update: s3_box_lcd
+  #     else:
+  #       - if:
+  #           condition:
+  #             - switch.is_off: output_audio
+  #           then:
+  #             - switch.turn_on: timer_ringing
+  #             - script.execute: timer_started
+  #             - display.page.show: timer_finished_page
+  #             - component.update: s3_box_lcd
     
 micro_wake_word:  
   vad:
@@ -240,11 +240,11 @@ micro_wake_word:
                   - media_player.stop
                   - voice_assistant.start
 
-microphone:
-  - platform: adf_pipeline
-    id: box_mic
-    keep_pipeline_alive: true
-    pipeline:
-      - adf_i2s_in
-      - resampler
-      - self
+# microphone:
+#   - platform: adf_pipeline
+#     id: box_mic
+#     keep_pipeline_alive: true
+#     pipeline:
+#       - adf_i2s_in
+#       - resampler
+#       - self

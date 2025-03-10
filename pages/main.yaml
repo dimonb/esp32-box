@@ -107,6 +107,8 @@ widgets:
 
                       - lambda: |-
                           current_show_day = 1;
+                          lv_obj_clear_flag(weather_day_button_right, LV_OBJ_FLAG_HIDDEN);
+                          lv_obj_clear_flag(weather_day_button_left, LV_OBJ_FLAG_HIDDEN);
                           draw_weather_chart(weather_chart_obj);
                       - lvgl.page.show: page_weather
                     widgets:

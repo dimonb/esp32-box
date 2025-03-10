@@ -307,7 +307,7 @@ void processWeatherData() {
         lv_label_set_text_fmt(weather_icons[i], get_weather_icon(hourlyWeatherCodes[hour].first, hourlyWeatherCodes[hour].second).c_str());
         lv_obj_set_style_text_color(weather_icons[i], get_weather_icon_color(hourlyWeatherCodes[hour].first, hourlyWeatherCodes[hour].second), LV_PART_MAIN);
       } else {
-        lv_label_set_text_fmt(weather_icons[i], "");
+        lv_label_set_text_static(weather_icons[i], "");
       }
     }
 }
