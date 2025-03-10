@@ -38,83 +38,92 @@ api_status_update: !-
 
 widgets:
   - obj:
-      x: 4
-      align: TOP_LEFT
+      align: TOP_MID
       styles: [layout_box]
-      width: SIZE_CONTENT
-      height: 40
+      height: SIZE_CONTENT
+      width: 310
       layout:
-        pad_column: 3
-        type: GRID
-        grid_columns: [CONTENT, CONTENT, CONTENT]
-        grid_rows: [39]
+        pad_column: 5
+        type: FLEX
+        flex_align_cross: CENTER
       widgets:
-        - label:
-            id: api_status
-            styles: [toolbar_icon]
-            text: !? $_.api_status_update.text
-            text_color: !? $_.api_status_update.text_color
-            grid_cell_column_pos: 0
-            grid_cell_row_pos: 0
-            on_click:
-              - if:
-                  condition:
-                    - lvgl.page.is_showing: page_settings
-                  then:
-                    - lvgl.page.show: page_main
-                  else:
-                    - lvgl.page.show: page_settings
-        - label:
-            id: wifi_status
-            styles: [toolbar_icon]
-            text: !? $_.wifi_status_update.text
-            text_color: !? $_.wifi_status_update.text_color 
-            grid_cell_column_pos: 1
-            grid_cell_row_pos: 0
-            on_click:
-              - lambda: |-
-                  ESP_LOGI("lvgl", "WIFI connected");
-              - lvgl.page.show: page_wifi_info
-        - label:
+        - obj:
+            align: TOP_LEFT
+            styles: [layout_box]
+            width: SIZE_CONTENT
+            height: SIZE_CONTENT
+            flex_grow: 1
+            layout:
+              pad_column: 5
+              type: FLEX
+            widgets:
+              - label:
+                  id: api_status
+                  styles: [toolbar_icon]
+                  text: !? $_.api_status_update.text
+                  text_color: !? $_.api_status_update.text_color
+                  on_click:
+                    - if:
+                        condition:
+                          - lvgl.page.is_showing: page_settings
+                        then:
+                          - lvgl.page.show: page_main
+                        else:
+                          - lvgl.page.show: page_settings
+              - label:
+                  id: wifi_status
+                  styles: [toolbar_icon]
+                  text: !? $_.wifi_status_update.text
+                  text_color: !? $_.wifi_status_update.text_color 
+                  on_click:
+                    - lambda: |-
+                        ESP_LOGI("lvgl", "WIFI connected");
+                    - lvgl.page.show: page_wifi_info
+              - label:
 
-            id: mic_status
-            styles: [toolbar_icon]
-            text_color: !? $_.mic_status_update.text_color
-            text: !? $_.mic_status_update.text
-            grid_cell_column_pos: 2
-            grid_cell_row_pos: 0
-            on_click:
-              - switch.toggle: mute_switch
-              - lvgl.label.update:
                   id: mic_status
+                  styles: [toolbar_icon]
                   text_color: !? $_.mic_status_update.text_color
                   text: !? $_.mic_status_update.text
-              - lambda: |-
-                  ESP_LOGI("lvgl", "Microphone %s", id(mute_switch).state ? "off" : "on");
+                  on_click:
+                    - switch.toggle: mute_switch
+                    - lvgl.label.update:
+                        id: mic_status
+                        text_color: !? $_.mic_status_update.text_color
+                        text: !? $_.mic_status_update.text
+                    - lambda: |-
+                        ESP_LOGI("lvgl", "Microphone %s", id(mute_switch).state ? "off" : "on");
 
-  - obj:
-      x: 0
-      align: TOP_RIGHT
-      styles: [layout_box]
-      width: SIZE_CONTENT
-      height: 35
-      widgets:
-        - label:
-            id: temp_bedroom_status
-            styles: [toolbar_text]
-            text: ""
-        - label:
-            id: co2_bedroom_status
-            styles: [toolbar_text]
-            text: ""
-            grid_cell_y_align: CENTER
-        - label:
-            id: co2_bedroom_icon
-            styles: [toolbar_icon]
-            text_font: icon_font_25
-            height: 25
-            width: 20
-            pad_right: 2
-            text: !? $_.icon_glyphs.co2
-            grid_cell_y_align: END
-            
+        - obj:
+            align: RIGHT_MID
+            styles: [layout_box]
+            width: 180
+            height: SIZE_CONTENT
+            layout:
+              type: FLEX
+              flex_align_cross: END
+            widgets:
+              - label:
+                  id: temp_bedroom_status
+                  styles: [toolbar_text]
+                  text: ""
+                  flex_grow: 1
+              - obj:
+                  width: 82
+                  height: SIZE_CONTENT
+                  styles: [layout_box]
+                  widgets:
+                    - label:
+                        align: LEFT_MID
+                        id: co2_bedroom_status
+                        styles: [toolbar_text]
+                        text: ""
+                    - label:
+                        align: BOTTOM_RIGHT
+                        id: co2_bedroom_icon
+                        styles: [toolbar_icon]
+                        text_font: icon_font_25
+                        height: 20
+                        width: 20
+                        text: !? $_.icon_glyphs.co2
+                  

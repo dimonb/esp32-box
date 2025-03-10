@@ -38,7 +38,6 @@
   text_align: CENTER
   grid_cell_x_align: STRETCH
   grid_cell_y_align: CENTER
-  height: 30
 - id: toolbar_text
   text_color: light_blue
   text_font: my_font28
