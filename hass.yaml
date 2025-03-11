@@ -57,8 +57,6 @@ sensor:
       - lvgl.label.update:
           id: co2_bedroom_icon
           text_color: !lambda return co2_color(id(co2_bedroom).state);
-      - component.update: s3_box_lcd
-
 
   - platform: homeassistant
     id: temperature_bedroom
@@ -70,9 +68,7 @@ sensor:
           text: 
             format: "%2.1f°"
             args: [id(temperature_bedroom).state]
-          
-      - component.update: s3_box_lcd
-
+        
 
   # - !for list(0, 1, 2, 3, 4): !()
   #     - platform: homeassistant
@@ -98,8 +94,11 @@ binary_sensor:
   - platform: homeassistant
     id: bedroom_light
     entity_id: light.pw_switch02
+    publish_initial_state: true
     on_state:
-      - lambda: |-
-          ESP_LOGI("bedroom_light", "Bedroom light state: %s", id(bedroom_light).state ? "on" : "off");
-      - !? $_.main.button_light_update.action
+      then:
+        - lambda: |-
+            ESP_LOGI("bedroom_light", "Bedroom light state: %s", id(bedroom_light).state ? "on" : "off");
+        - !? $_.main.button_light_update.action
+
 
