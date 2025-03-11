@@ -123,6 +123,7 @@ api:
     - lambda: |-
         id(api_connection) = false;
     - !? $_.top_layer.api_status_update.action
+
 ota:
   - platform: esphome
     on_begin:
@@ -130,19 +131,19 @@ ota:
         - lvgl.pause
         - lambda: |-
             ESP_LOGI("ota", "OTA started");
-            auto display = id(s3_box_lcd);
+            auto it = id(s3_box_lcd);
 
-            display->fill(Color::BLACK);
-            display->printf(160, 60, id(icon_font_75), red, TextAlign::CENTER, "\U000F08D6");  
-            display->printf((display->get_width() / 2), (display->get_height() / 2), id(my_font28), red, TextAlign::CENTER, "FIRMWARE UPDATING");
-            display->printf(160,190, id(my_font28), red, TextAlign::CENTER, "[                ]");
+            it->fill(Color::BLACK);
+            it->printf(160, 60, id(icon_font_75), red, TextAlign::CENTER, "\U000F08D6");  
+            it->printf((it->get_width() / 2), (it->get_height() / 2), id(my_font28), red, TextAlign::CENTER, "FIRMWARE UPDATING");
+            it->printf(160,190, id(my_font28), red, TextAlign::CENTER, "[                ]");
+            it->update();
 
-            display->update();
     on_progress:
       then: 
         - lambda: |-
             ESP_LOGI("ota", "OTA progress: %2.1f", x);
-            auto display = id(s3_box_lcd);
+            auto it = id(s3_box_lcd);
 
             static const int totalBars = 16;  
             int filledBars = round((x / 100.0) * totalBars);
@@ -155,12 +156,17 @@ ota:
             progress[totalBars+1] = ']';
             progress[totalBars+2] = '\0';
 
-            display->printf(160, 190, id(my_font28), red, TextAlign::CENTER, progress);
-            display->update();
+            it->printf(160, 190, id(my_font28), red, TextAlign::CENTER, progress);
+            it->update();
+
     on_end:
       then:
         - lambda: |-
             ESP_LOGI("ota", "OTA ended");
+            auto it = id(s3_box_lcd);
+
+            it->printf(160,190, id(my_font28), green, TextAlign::CENTER, "[================]");
+            it->update();
       # - component.update: s3_box_lcd   
 logger:
   hardware_uart: USB_SERIAL_JTAG
@@ -207,7 +213,6 @@ lvgl:
     - !? $_.page_settings
     - !? $_.page_wifi_info
     - !? $_.page_weather
-    - !? $_.page_ota
 
   style_definitions: !? $import('pages/styles.yaml')
 
