@@ -20,7 +20,8 @@ widgets:
               grid_cell_row_pos: 0
               grid_cell_column_pos: 0
           - label:
-              text: !lambda return id(connected_ssid).state.c_str();
+              id: connected_ssid_label
+              text: "--:--"
               text_font: my_font18
               text_color: yellow
               grid_cell_x_align: CENTER
@@ -34,7 +35,8 @@ widgets:
               grid_cell_row_pos: 2
               grid_cell_column_pos: 0
           - label:
-              text: !lambda return id(connected_bssid).state.c_str();
+              id: connected_bssid_label
+              text: "--:--"
               text_font: my_font18
               text_color: yellow
               grid_cell_x_align: CENTER
@@ -48,7 +50,8 @@ widgets:
               grid_cell_row_pos: 4
               grid_cell_column_pos: 0
           - label:
-              text: !lambda return id(device_mac).state.c_str();
+              id: device_mac_label
+              text: "--:--"
               text_font: my_font18
               text_color: yellow
               grid_cell_x_align: CENTER
@@ -71,6 +74,7 @@ widgets:
                     text_font: my_font22
                     text_color: light_blue
                 - label:
-                    text: !lambda return str_sprintf("%4.f%%", id(wifi_percent).state);
+                    id: wifi_percent_label
+                    text: "--%"
                     text_font: my_font22
                     text_color: yellow

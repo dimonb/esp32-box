@@ -78,16 +78,7 @@ esp32:
       CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
       CONFIG_AUDIO_BOARD_CUSTOM: "y"
       CONFIG_ESP32_S3_BOX_3_BOARD: "y"
-      
-      # CONFIG_ESP32_SPIRAM_SUPPORT: y
-      # CONFIG_ESP32S3_SPIRAM_SUPPORT: y
-      CONFIG_SPIRAM_USE: y
-      # CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY: y
-      # CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY: y
-      #CONFIG_SPIRAM_USE_MALLOC: y
-      #CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL: "8192"
-      #CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL: "16384"
-      #CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY: n
+      #CONFIG_SPIRAM_USE: y
 
     # components:
     #   - name: esp32_s3_box_3_board
@@ -96,7 +87,7 @@ esp32:
    
 psram:
   mode: octal
-  speed: 80MHz
+  speed: 120MHz
   
 http_request:
   useragent: esphome/device
@@ -135,21 +126,52 @@ api:
 ota:
   - platform: esphome
     on_begin:
-      - lambda: id(led).turn_on().set_brightness(1.0).set_transition_length(0).perform();
-                id(led).loop();
-      
-      # - display.page.show: ota_page
+      then:
+        - lvgl.pause
+        - lambda: |-
+            ESP_LOGI("ota", "OTA started");
+            auto display = id(s3_box_lcd);
+
+            display->fill(Color::BLACK);
+            display->printf(160, 60, id(icon_font_75), red, TextAlign::CENTER, "\U000F08D6");  
+            display->printf((display->get_width() / 2), (display->get_height() / 2), id(my_font28), red, TextAlign::CENTER, "FIRMWARE UPDATING");
+            display->printf(160,190, id(my_font28), red, TextAlign::CENTER, "[                ]");
+
+            display->update();
+    on_progress:
+      then: 
+        - lambda: |-
+            ESP_LOGI("ota", "OTA progress: %2.1f", x);
+            auto display = id(s3_box_lcd);
+
+            static const int totalBars = 16;  
+            int filledBars = round((x / 100.0) * totalBars);
+
+            char progress[totalBars+3]; 
+            for(int i = 0; i < totalBars; i++) {
+                progress[i+1] = (i < (x/100.0)*totalBars) ? '=' : ' ';
+            }
+            progress[0] = '[';
+            progress[totalBars+1] = ']';
+            progress[totalBars+2] = '\0';
+
+            display->printf(160, 190, id(my_font28), red, TextAlign::CENTER, progress);
+            display->update();
+    on_end:
+      then:
+        - lambda: |-
+            ESP_LOGI("ota", "OTA ended");
       # - component.update: s3_box_lcd   
 logger:
   hardware_uart: USB_SERIAL_JTAG
-  level: VERBOSE
+  level: DEBUG
   logs:
     text_sensor: WARN
     component: ERROR
     auto_brightness: INFO
     main: DEBUG
     weather: DEBUG
-    json: VERBOSE
+    json: DEBUG
     lvgl: DEBUG
     ledc.output: DEBUG
 
@@ -181,15 +203,18 @@ lvgl:
   top_layer: !? $import('pages/top_layer.yaml')
 
   pages:
-    - !? $import('pages/main.yaml')
-    - !? $import('pages/settings.yaml')
-    - !? $import('pages/wifi_info.yaml')
+    - !? $_.page_main
+    - !? $_.page_settings
+    - !? $_.page_wifi_info
     - !? $_.page_weather
+    - !? $_.page_ota
 
   style_definitions: !? $import('pages/styles.yaml')
 
 
-captive_portal:      
+captive_portal:
+
+
 time:
   - platform: homeassistant
     id: ha_time
@@ -206,31 +231,20 @@ time:
               ESP_LOGI("main", "Time updated %s", id(ha_time).now().strftime("%H:%M").c_str());
           - !? $_.page_main.time_update.action
           - !? $_.page_main.date_update.action
-
-f_update_state: !()
-  interval: 10s
-  then:
-    - if:
-        condition:
-          - lambda: !? '"return { (id(" + $.name + "_connection) != true) };"'
-        then:
-          - if:
-              condition:
-                !? $.name+".connected":
-              then:
-                - lambda: !? '"id(" + $.name + "_connection) = true;"'
-        else:
-          - if:
-              condition:
-                not:
-                  !? $.name+".connected":
-              then:
-                - lambda: !? '"id(" + $.name + "_connection) = true;"'
   
 
 interval:
-  - !? ($_.f_update_state)({ name => 'api' })  
-  - !? ($_.f_update_state)({ name => 'wifi' })  
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            - lambda: 'return id(api_connection) != api::APIConnectedCondition<>().check();'
+          then:
+            - lambda: |-
+                ESP_LOGE("main", "API connection: %s", id(api_connection) ? "true" : "false");
+                id(api_connection) = api::APIConnectedCondition<>().check();
+            - !? $_.top_layer.api_status_update.action
+          
 
   - interval: 60s
     then:
@@ -241,6 +255,7 @@ interval:
   - interval: 30s
     then:
       - component.update: s3_box_lcd
+
 
   - interval: 60s
     then:
@@ -411,6 +426,9 @@ script:
 
  
 globals:
+  - id: manual_render
+    type: bool
+    initial_value: 'false'
   - id: wifi_connection
     type: bool
     restore_value: no
@@ -493,6 +511,7 @@ sensor:
     name: "WiFi db"
     id: wifi_signal_db
     update_interval: 30s
+
     
   - platform: copy 
     source_id: wifi_signal_db
@@ -503,6 +522,10 @@ sensor:
     unit_of_measurement: "%"
     entity_category: "diagnostic"
     device_class: ""   
+    on_value:
+      - lvgl.label.update:
+          id: wifi_percent_label
+          text: !lambda return str_sprintf("%4.f%%", id(wifi_percent).state);
     
   - !for $_.hass.sensor: !()
     - !? $
@@ -536,12 +559,24 @@ text_sensor:
       id: connected_ssid
       name: SSID
       entity_category: "diagnostic"
+      on_value:
+        - lvgl.label.update:
+            id: connected_ssid_label
+            text: !lambda return id(connected_ssid).state.c_str();
     bssid:
       id: connected_bssid
       name: BSSID
       entity_category: "diagnostic"
+      on_value:
+        - lvgl.label.update:
+            id: connected_bssid_label
+            text: !lambda return id(connected_bssid).state.c_str();
     mac_address:
       id: device_mac
+      on_value:
+        - lvgl.label.update:
+            id: device_mac_label
+            text: !lambda return id(device_mac).state.c_str();
 
   - platform: template
     id: up_sens_text
@@ -670,7 +705,6 @@ display:
     update_interval: never
     invert_colors: false
     auto_clear_enabled: false
-
 
 i2c:
   - id: bus_a

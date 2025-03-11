@@ -43,7 +43,7 @@ font:
     - !? $.mergeWith(dict("bpp" => 1))
   - !for $_.page_resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
     - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
-  - !for $_.page_resources.font.where($.id = "my_font18" or $.id = "my_font22"): !()
+  - !for $_.page_resources.font.where($.id = "my_font18" or $.id = "my_font22" or $.id = "my_font14"): !()
     - !? $.mergeWith(dict("bpp" => 4))
   - !for $_.page_resources.font.where($.id = "icon_font_15" or $.id = "icon_font_25"): !()
     - !? $.mergeWith(dict("bpp" => 8))
@@ -53,6 +53,8 @@ lvgl:
   touchscreens:
     - s3_box_touch
   top_layer: !? $import('pages/top_layer.yaml')
+
+  draw_rounding: 2
 
   pages:
     - !? $import('pages/main.yaml')

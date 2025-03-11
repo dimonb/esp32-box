@@ -325,7 +325,8 @@ static void draw_weather_chart(lv_obj_t *obj) {
     lv_chart_set_type(chart, LV_CHART_TYPE_LINE);   /*Show lines and points too*/
 
     lv_obj_set_style_line_color(chart, lv_color_make(70, 70, 70), LV_PART_TICKS); // Less contrast grid lines
-    lv_obj_set_style_line_color(chart, lv_color_make(70, 70, 70), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(chart, lv_color_make(70, 70, 70), LV_PART_MAIN);
+    lv_obj_set_style_line_color(chart, lv_color_make(70, 70, 70), LV_PART_TICKS);
 
     /*Add two data series*/
     ser1 = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_SECONDARY_Y);

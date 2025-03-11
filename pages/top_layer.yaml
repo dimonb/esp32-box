@@ -38,7 +38,9 @@ api_status_update: !-
 
 widgets:
   - obj:
+      id: top_layer
       align: TOP_MID
+      pad_top: 5
       styles: [layout_box]
       height: SIZE_CONTENT
       width: 310
@@ -106,7 +108,7 @@ widgets:
               - label:
                   id: temp_bedroom_status
                   styles: [toolbar_text]
-                  text: ""
+                  text: "--.-°"
                   flex_grow: 1
               - obj:
                   width: 82
@@ -117,7 +119,7 @@ widgets:
                         align: LEFT_MID
                         id: co2_bedroom_status
                         styles: [toolbar_text]
-                        text: ""
+                        text: "---"
                     - label:
                         align: BOTTOM_RIGHT
                         id: co2_bedroom_icon
