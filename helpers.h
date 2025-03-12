@@ -119,6 +119,7 @@ std::string get_date_string(const std::string &date) {
 static StaticJsonDocument<64*1024> weather_data;
 static std::vector<float> points(24, std::numeric_limits<float>::quiet_NaN());
 static lv_obj_t *chart = nullptr;
+static lv_obj_t *square = nullptr;
 static lv_chart_series_t *ser1 = nullptr;
 static lv_obj_t* weather_icons[14] = {nullptr};
 static int current_show_day = 0;
@@ -169,8 +170,6 @@ lv_color_t get_temperature_color(float value) {
     return lv_color_make(red, green, blue);
 }
 
-
-
 void draw_event_cb(lv_event_t *e) {
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_draw_part_dsc_t *dsc = static_cast<lv_obj_draw_part_dsc_t*>(lv_event_get_param(e));
@@ -217,6 +216,20 @@ void draw_event_cb(lv_event_t *e) {
     lv_draw_mask_remove_id(fade_mask_id);
 }
 
+size_t get_shadow_box_width() {
+  if (current_show_day < 1) {
+    return 230;
+  } else if (current_show_day > 1) {
+    return 0;
+  }
+
+  auto current_time = id(ha_time).now();
+  int hour = current_time.hour;
+  int minute = current_time.minute;
+  int shadow_box_width = (hour * 60 + minute) * 23 / 144;
+
+  return shadow_box_width;
+}
 
 void processWeatherData() {
 
@@ -259,7 +272,6 @@ void processWeatherData() {
         ESP_LOGW("weather", "Error: Could not find the selected day in data\n");
         return;
     }
-
 
     std::map<int8_t, std::pair<int8_t, bool> > hourlyWeatherCodes;
     for (size_t i = 0; i < dataSize; ++i) {
@@ -326,6 +338,7 @@ void processWeatherData() {
 static void draw_weather_chart(lv_obj_t *obj) {
   if(chart == nullptr) {
     chart = lv_chart_create(obj);
+    lv_obj_set_scrollbar_mode(chart, LV_SCROLLBAR_MODE_OFF);
     lv_obj_add_style(chart, weather_chart, 0);
     lv_obj_set_style_size(chart, 0, LV_PART_INDICATOR);
     //lv_obj_set_style_bg_color(chart, lv_color_make(50, 50, 50), LV_PART_MAIN); // Dark grey background
@@ -351,6 +364,9 @@ static void draw_weather_chart(lv_obj_t *obj) {
       lv_obj_set_x(weather_icons[i], lv_obj_get_x(chart) + lv_obj_get_x(weather_icons[i]) + i * lv_obj_get_width(chart) / 13);
       //lv_obj_set_y(weather_icons[i], 10);
     }
+    square = lv_obj_create(chart);
+    lv_obj_add_style(square, weather_chart_square, 0);
+    lv_obj_set_height(square, 105);
   }
 
   processWeatherData();
@@ -369,7 +385,11 @@ static void draw_weather_chart(lv_obj_t *obj) {
 
   lv_chart_set_axis_tick(chart, LV_CHART_AXIS_PRIMARY_X, 5, 3, 7, 4, true, 20);
 
+  lv_obj_set_width(square, get_shadow_box_width());
+
   lv_chart_refresh(chart); /*Required after direct set*/
+
+
 }
 
 

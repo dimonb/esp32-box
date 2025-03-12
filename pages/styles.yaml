@@ -55,6 +55,11 @@
   height: 119
   x: 20
   y: 15
+- id: weather_chart_square
+  bg_color: black
+  bg_opa: 70%
+  border_width: 0
+
 - id: weather_small_icon
   text_font: icon_font_15
   text_color: light_blue
