@@ -3,7 +3,7 @@ config: !- $import('config.yaml')
 
 sub: !- $_.config.substitutions
 
-substitutions: !? '$_.sub.delete("font_glyphs").mergeWith(dict("font_glyphs" => "&@!\"%(){}+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"))'
+substitutions: !? '$_.sub.delete("font_glyphs").mergeWith(dict("font_glyphs" => "^*;''#[]&@!\"%(){}+=,-_.:°/$€£¥?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"))'
 
 json:
 
@@ -42,7 +42,7 @@ font:
   - !for $_.page_resources.font.where($.id = "icon_font_35" or $.id = "my_font28" or $.id = "icon_font_75" or $.id = "icon_font_60"): !()
     - !? $.mergeWith(dict("bpp" => 1))
   - !for $_.page_resources.font.where($.id = "my_font82" or $.id = "my_font72"): !()
-    - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
+    - !? $.mergeWith(dict("bpp" => 4, "glyphs" => "[]0123456789:JFMAOSNDTWabcdeghiklmnpqrvwxyz"))
   - !for $_.page_resources.font.where($.id = "my_font18" or $.id = "my_font22" or $.id = "my_font14"): !()
     - !? $.mergeWith(dict("bpp" => 4))
   - !for $_.page_resources.font.where($.id = "icon_font_15" or $.id = "icon_font_25"): !()
@@ -122,6 +122,9 @@ esphome:
   on_boot:
     priority: 600
     then:
+      # - lvgl.pause
+      # - script.execute: matrix_animation
+      # - delay: 30s
       - lambda: |-
           id(time_display_format).publish_state("24 Hr");
           id(temperature_bedroom).publish_state(22.9);

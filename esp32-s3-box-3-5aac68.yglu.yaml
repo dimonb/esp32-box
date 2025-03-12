@@ -167,6 +167,8 @@ ota:
 
             it->printf(160,190, id(my_font28), green, TextAlign::CENTER, "[================]");
             it->update();
+        - script.execute: matrix_animation
+
       # - component.update: s3_box_lcd   
 logger:
   hardware_uart: USB_SERIAL_JTAG
