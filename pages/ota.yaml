@@ -1,0 +1,90 @@
+platform: esphome
+
+on_begin:
+  then:
+    - lvgl.pause
+    - lambda: |-
+        ESP_LOGI("ota", "OTA started");
+        auto it = id(s3_box_lcd);
+
+        it->fill(Color::BLACK);
+        it->printf(160, 60, id(icon_font_75), red, TextAlign::CENTER, "\U000F08D6");  
+        it->printf((it->get_width() / 2), (it->get_height() / 2), id(my_font28), red, TextAlign::CENTER, "FIRMWARE UPDATING");
+        it->printf(160,190, id(my_font28), red, TextAlign::CENTER, "[                ]");
+        it->update();
+
+on_progress:
+  then: 
+    - lambda: |-
+        ESP_LOGI("ota", "OTA progress: %2.1f", x);
+        auto it = id(s3_box_lcd);
+
+        static const int totalBars = 16;  
+        int filledBars = round((x / 100.0) * totalBars);
+
+        char progress[totalBars+3]; 
+        for(int i = 0; i < totalBars; i++) {
+            progress[i+1] = (i < (x/100.0)*totalBars) ? '=' : ' ';
+        }
+        progress[0] = '[';
+        progress[totalBars+1] = ']';
+        progress[totalBars+2] = '\0';
+
+        it->printf(160, 190, id(my_font28), red, TextAlign::CENTER, progress);
+        it->update();
+
+on_end:
+  then:
+    - lambda: |-
+        ESP_LOGI("ota", "OTA ended");
+        auto it = id(s3_box_lcd);
+
+        it->printf(160,190, id(my_font28), green, TextAlign::CENTER, "[================]");
+        it->update();
+
+    - lambda: |-
+        auto it = id(s3_box_lcd);
+
+        const char* matrix_chars = "{font_glyphs}";
+        const int chars_count = strlen(matrix_chars);
+        const int columns = 320 / 14;
+        int drops[columns];
+
+        for (int i = 0; i < columns; i++)
+          drops[i] = rand() % 240;
+
+        //it->clear();
+
+        // Matrix-style falling animation
+        for (int step = 0; step < 20; step++) {
+          //it->clear();
+          for (int i = 0; i < columns; i++) {
+            // Head character (bright white)
+            it->printf(i * 14, drops[i], id(my_font28), id(white), TextAlign::TOP_LEFT, "%c", matrix_chars[rand() % chars_count]);
+
+            // Trail characters (green)
+            for (int t = 1; t < 5; t++) {
+              int trail_pos = drops[i] - (t * 14);
+              if (trail_pos >= 0 && trail_pos < 240) {
+                it->printf(i * 14, trail_pos, id(my_font28), id(green), TextAlign::TOP_LEFT, "%c", matrix_chars[rand() % chars_count]);
+              }
+            }
+
+            drops[i] += 14;
+            if (drops[i] > 240 + rand() % 100)
+              drops[i] = 0;
+          }
+
+          it->update();
+          delay(50);
+        }
+
+        // // Draw a broken/cracked screen effect
+        // for (int i = 0; i < 20; i++) {
+        //     int x0 = rand() % it->get_width();
+        //     int y0 = rand() % it->get_height();
+        //     int x1 = rand() % it->get_width();
+        //     int y1 = rand() % it->get_height();
+        //     it->line(x1, y1, x0, y0, id(white));
+        //     it->update();  
+        // }

@@ -6,7 +6,7 @@ YML = esp32-s3-box-3-5aac68.yaml
 
 PAGES = pages/resources.yaml pages/settings.yaml pages/top_layer.yaml \
 		pages/main.yaml pages/styles.yaml pages/wifi_info.yaml \
-		pages/weather.yaml
+		pages/weather.yaml pages/ota.yaml
 
 DEPS = config.yaml hass.yaml secrets.yaml settings.yaml touch.yaml voice.yaml $(PAGES)
 
