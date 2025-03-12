@@ -23,14 +23,15 @@
   height: 200
   align: BOTTOM_MID
 - id: main_page_button
-  width: 80
+  width: 85
   height: 80
-  pad_all: 3
   border_width: 1
   shadow_width: 0
+  pad_all: 2
   bg_color: black
   text_font: icon_font_75
   text_color: light_blue
+
 - id: toolbar_icon
   text_color: light_blue
   text_font: icon_font_35
@@ -61,6 +62,6 @@
   x: 3
 - id: weather_small_icon_button
   bg_color: black
-  width: 22
-  height: 22
+  width: 30
+  height: 30
   shadow_width: 0

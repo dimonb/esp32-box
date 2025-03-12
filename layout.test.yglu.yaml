@@ -129,7 +129,7 @@ esphome:
           id(time_display_format).publish_state("24 Hr");
           id(temperature_bedroom).publish_state(22.9);
           id(co2_bedroom).publish_state(947);
-          id(openweathermap_condition).publish_state("cloudy");
+          id(openweathermap_condition).publish_state("exceptional");
           id(openweathermap_temperature).publish_state(18.0);
           
       - component.update: s3_box_lcd

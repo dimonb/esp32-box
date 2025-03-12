@@ -39,7 +39,7 @@ widgets:
       layout:
         type: GRID
         grid_columns: [FR(1)]
-        grid_rows: [25, 160]
+        grid_rows: [30, 160]
       on_click:
         - lambda: |-
             draw_weather_chart(weather_chart_obj);

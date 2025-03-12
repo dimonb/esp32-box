@@ -50,6 +50,16 @@ std::string get_weather_icon(const std::string &condition) {
   }    
 }
 
+lv_color_t get_weather_icon_color(const std::string &condition) {
+    if (condition == "clear-night") {
+        return lv_color_make(id(blue));  
+    } else if (condition == "sunny" || condition == "exceptional" || condition == "partlycloudy") {
+        return lv_color_make(id(yellow));
+    } else {
+        return lv_color_make(id(white)); 
+    }
+}
+
 std::string get_weather_icon(int code, bool is_day) {
     // Day/night specific cases
     if (code == 0) return is_day ? "\U000F0599" : "\U000F0594";

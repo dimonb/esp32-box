@@ -84,6 +84,7 @@ widgets:
                     widgets:
                       - label:
                           text: !? $_.icon_glyphs.music
+                          align: CENTER
                 - button:
                     id: button_light
                     styles: [main_page_button]
@@ -97,6 +98,7 @@ widgets:
                     widgets:
                       - label:
                           text: !? $_.icon_glyphs.light_on
+                          align: CENTER
                     text_color: !? $_.button_light_update.text_color
                 - button:
                     id: button_weather
@@ -113,14 +115,14 @@ widgets:
                       - lvgl.page.show: page_weather
                     widgets:
                       - label:
-                          x: -7
-                          y: 0
-                          text: !? $_.icon_glyphs.weather_partly_cloudy
+                          id: label_weather_main_icon
+                          text: !? $_.icon_glyphs.help
                           text_font: icon_font_60
                           text_color: white
+                          align: TOP_LEFT
                       - label:
-                          x: 43
-                          y: 50
-                          text: 12°
+                          id: label_weather_main_temp
+                          text: "--°"
                           text_font: my_font22
                           text_color: white
+                          align: BOTTOM_RIGHT

@@ -6,8 +6,11 @@ text_sensor:
     entity_id: sensor.openweathermap_condition
     id: openweathermap_condition
     on_value:
-      - component.update: s3_box_lcd
-      
+      - lvgl.label.update:
+          id: label_weather_main_icon
+          text: !lambda return get_weather_icon(id(openweathermap_condition).state);
+          text_color: !lambda return get_weather_icon_color(id(openweathermap_condition).state);
+          
   - platform: homeassistant
     name: "Sun next dawn"
     entity_id: sensor.sun_next_dawn
@@ -43,7 +46,9 @@ sensor:
     entity_id: sensor.openweathermap_temperature
     internal: True
     on_value:
-      component.update: s3_box_lcd
+      - lvgl.label.update:
+          id: label_weather_main_temp
+          text: !lambda return str_sprintf("%2.0f°", id(openweathermap_temperature).state);
 
   - platform: homeassistant
     id: co2_bedroom
