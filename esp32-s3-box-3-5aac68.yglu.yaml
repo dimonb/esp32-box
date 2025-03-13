@@ -1,11 +1,9 @@
-## You can change the friendly name if you wish on line 7 below. The friendly name is how the device will show in HA 
+## You can change the friendly name if you wish on line 7 below. The friendly name is how the device will show in HA
 ## However the <name:> is how HA connects to the device eg. esp32-s3-box-3.local is the mDNS hostname for the device.
 ## Once added to HA changing the device name can lead to connection issues, between HA and the device.
 
-
 config: !- $import('config.yaml')
 substitutions: !? $_.config.substitutions
-
 
 image: !? $_.page_resources.image
 font: !? $_.page_resources.font
@@ -16,11 +14,9 @@ voice: !- $import('voice.yaml')
 #micro_wake_word: !? $_.voice.micro_wake_word
 #microphone: !? $_.voice.microphone
 
-
 settings: !- $import('settings.yaml')
 
 hass: !- $import('hass.yaml')
-
 
 top_layer: !- $import('pages/top_layer.yaml')
 page_weather: !- $import('pages/weather.yaml')
@@ -28,7 +24,6 @@ page_resources: !- $import('pages/resources.yaml')
 page_main: !- $import('pages/main.yaml')
 page_settings: !- $import('pages/settings.yaml')
 page_wifi_info: !- $import('pages/wifi_info.yaml')
-
 
 esphome:
   name: ${name}
@@ -38,21 +33,21 @@ esphome:
     board_build.psram: "enabled"
     board_build.flash_mode: dio
     build_flags:
-      - -D LV_USE_CHART=1  # Enable chart widget, it's not supported by default
+      - -D LV_USE_CHART=1 # Enable chart widget, it's not supported by default
 
   on_boot:
     priority: 600
     then:
       #- lambda: id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
       #- script.execute: saver_enabled
-      - lambda: id(time_remaining_0).publish_state ("0:00:00"); 
+      - lambda: id(time_remaining_0).publish_state ("0:00:00");
       # - if:
       #     condition:
       #       switch.is_on: output_audio
       #     then:
-      #       media_player.volume_set:    
+      #       media_player.volume_set:
       #         id: adf_media_player
-      #         volume: 0 
+      #         volume: 0
   includes:
     - helpers.h
 
@@ -79,11 +74,11 @@ esp32:
     #   - name: esp32_s3_box_3_board
     #     source: github://jesserockz/esp32-s3-box-3-board@main
     #     refresh: 0s
-   
+
 psram:
   mode: octal
   speed: 120MHz
-  
+
 http_request:
   useragent: esphome/device
   timeout: 10s
@@ -97,12 +92,12 @@ external_components:
   #     url: https://github.com/dimonb/esphome_audio
   #     ref: dev-next
   #   components: [ adf_pipeline, i2s_audio ]
-  #   refresh: 0s  
-  - source:  github://dimonb/esphome@dev
-    components: [ http_request]
-  - source:  ./external_components
-    components: [ json]
-    
+  #   refresh: 0s
+  - source: github://dimonb/esphome@dev
+    components: [http_request]
+  - source: ./external_components
+    components: [json]
+
 api:
   encryption:
     key: !secret esphome_api_key
@@ -121,7 +116,6 @@ api:
 
 ota:
   - !? $import('pages/ota.yaml')
-    
 
 logger:
   hardware_uart: USB_SERIAL_JTAG
@@ -171,9 +165,7 @@ lvgl:
 
   style_definitions: !? $import('pages/styles.yaml')
 
-
 captive_portal:
-
 
 time:
   - platform: homeassistant
@@ -184,29 +176,27 @@ time:
       - !? $_.page_main.time_update.action
       - !? $_.page_main.date_update.action
     on_time:
-      - minutes: '*'
+      - minutes: "*"
         seconds: 0
         then:
           - lambda: |-
               ESP_LOGI("main", "Time updated %s", id(ha_time).now().strftime("%H:%M").c_str());
           - !? $_.page_main.time_update.action
           - !? $_.page_main.date_update.action
-  
 
 interval:
   - interval: 10s
     then:
       - if:
           condition:
-            - lambda: 'return id(api_connection) != api::APIConnectedCondition<>().check();'
+            - lambda: "return id(api_connection) != api::APIConnectedCondition<>().check();"
           then:
             - lambda: |-
                 ESP_LOGE("main", "API connection: %s", id(api_connection) ? "true" : "false");
                 id(api_connection) = api::APIConnectedCondition<>().check();
             - !? $_.top_layer.api_status_update.action
-          
 
-  - interval: 60s
+  - interval: 360s
     then:
       - lambda: |-
           ESP_LOGI("main", "Updating weather");
@@ -215,7 +205,6 @@ interval:
   - interval: 30s
     then:
       - component.update: s3_box_lcd
-
 
   - interval: 60s
     then:
@@ -239,8 +228,6 @@ interval:
               id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
             }
           }
-
-  
 
 select:
   - platform: template
@@ -300,16 +287,16 @@ select:
                   state: !lambda 'return "24 Hr";'
             else:
               - text_sensor.template.publish:
-                    id: time_display_format
-                    state: !lambda 'return "12 Hr";'
+                  id: time_display_format
+                  state: !lambda 'return "12 Hr";'
         - component.update: s3_box_lcd
-                
-script:   
+
+script:
   - !for $_.settings.script: !()
-    - !? $
+      - !? $
 
   - !for $_.page_weather.script: !()
-    - !? $
+      - !? $
 
   - id: set_volume
     then:
@@ -317,19 +304,19 @@ script:
           ESP_LOGI("main", "Setting volume to"); //, id(speaker_volume).state);
       # - media_player.volume_set:
       #     volume: !lambda return 0.5 + id(speaker_volume) * 0.05 ;
-          
+
   - id: timer_started
-    then:      
+    then:
       - lambda: |-
           ESP_LOGI("main", "Timer started");
       # while:
       #   condition:
       #     switch.is_on: timer_ringing
-      #   then:    
+      #   then:
       #     - media_player.play_media:
       #         media_url: '${home_assistant_host}/local/sounds/timer_finished.mp3'
-      #     - delay: 1s   
-        
+      #     - delay: 1s
+
   - id: timer_started_external
     then:
       while:
@@ -340,24 +327,22 @@ script:
               service: media_player.play_media
               data:
                 entity_id: media_player.${external_media_player}
-                media_content_id: '${home_assistant_host}/local/sounds/timer_finished.mp3'
+                media_content_id: "${home_assistant_host}/local/sounds/timer_finished.mp3"
                 media_content_type: music
           - delay: 1700ms
-        
-        
+
   # - id: timer_ending
   #   then:
-  #     - wait_until: 
+  #     - wait_until:
   #           - lambda: return (id(time_remaining_0).state == "0:00:10");
   #     - script.execute: saver_enabled
   #     - display.page.show: time_remaining_page
-  #     - component.update: s3_box_lcd         
+  #     - component.update: s3_box_lcd
 
- 
 globals:
   - id: manual_render
     type: bool
-    initial_value: 'false'
+    initial_value: "false"
   - id: wifi_connection
     type: bool
     restore_value: no
@@ -365,15 +350,15 @@ globals:
   - id: api_connection
     type: bool
     restore_value: no
-    initial_value: "false" 
+    initial_value: "false"
   - id: mute_value
     type: bool
     restore_value: no
-    initial_value: "false" 
+    initial_value: "false"
   - id: speaker_volume
     type: int
     restore_value: no
-    initial_value: '5'
+    initial_value: "5"
   - id: media_state
     type: bool
     restore_value: no
@@ -389,26 +374,25 @@ globals:
   #   restore_value: false
   - id: global_is_timer
     type: bool
-    restore_value: false    
+    restore_value: false
   - id: current_pin
     type: std::string
-    initial_value: "" 
+    initial_value: ""
 
 number:
   - !for $_.settings.number: !()
-    - !? $
-
+      - !? $
 
 button:
   - platform: restart
     id: reboot
     name: "Reboot"
     entity_category: diagnostic
-    
+
 switch:
   - !for $_.settings.switch: !()
-    - !? $
- 
+      - !? $
+
 output:
   - platform: ledc
     pin: GPIO47
@@ -422,8 +406,8 @@ light:
     output: backlight_output
     restore_mode: ALWAYS_ON
     default_transition_length: 50ms
-    
-sensor:         
+
+sensor:
   - platform: uptime
     id: up_sens
     on_value:
@@ -433,7 +417,7 @@ sensor:
           int hours = seconds / 3600;
           int minutes = (seconds % 3600) / 60;
           seconds %= 60;
-          id(up_sens_text).publish_state(str_sprintf("%03d:%02d:%02d:%02d", days, hours, minutes, seconds)); 
+          id(up_sens_text).publish_state(str_sprintf("%03d:%02d:%02d:%02d", days, hours, minutes, seconds));
     update_interval: 30s
 
   - platform: wifi_signal
@@ -441,8 +425,7 @@ sensor:
     id: wifi_signal_db
     update_interval: 30s
 
-    
-  - platform: copy 
+  - platform: copy
     source_id: wifi_signal_db
     name: "WiFi Signal"
     id: wifi_percent
@@ -450,14 +433,14 @@ sensor:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"
     entity_category: "diagnostic"
-    device_class: ""   
+    device_class: ""
     on_value:
       - lvgl.label.update:
           id: wifi_percent_label
           text: !lambda return str_sprintf("%4.f%%", id(wifi_percent).state);
-    
+
   - !for $_.hass.sensor: !()
-    - !? $
+      - !? $
 
 text_sensor:
   - id: text_request
@@ -518,9 +501,9 @@ text_sensor:
 
   - platform: template
     id: time_remaining_0
-    name: Timer 
+    name: Timer
     icon: mdi:clock
-               
+
   - platform: template
     id: time_remaining_1
 
@@ -539,18 +522,18 @@ text_sensor:
     id: ha_media_title
     attribute: media_content_id
     on_value:
-      component.update: s3_box_lcd 
+      component.update: s3_box_lcd
 
   - platform: homeassistant
     name: "Alarm Status"
     entity_id: alarm_control_panel.alarmo
-    id: alarm_status  
+    id: alarm_status
     on_value:
-      - component.update: s3_box_lcd    
+      - component.update: s3_box_lcd
 
   - !for $_.hass.text_sensor: !()
-    - !? $
-      
+      - !? $
+
 # i2s_audio:
 #   - id: i2s_shared
 #     i2s_lrclk_pin:
@@ -606,7 +589,7 @@ text_sensor:
 #       - self
 #       - resampler
 #       - adf_i2s_out
-#     on_play: 
+#     on_play:
 #       - lambda: |-
 #           id(media_state) = true;
 #       - component.update: s3_box_lcd
@@ -615,11 +598,9 @@ text_sensor:
 #           id(media_state) = false;
 #       - component.update: s3_box_lcd
 
-
 spi:
   clk_pin: 7
   mosi_pin: 6
-
 
 display:
   - platform: ili9xxx
@@ -652,7 +633,6 @@ i2c:
     frequency: 50kHz
     id: bus_b
 
-
 touchscreen:
   - platform: gt911
     i2c_id: bus_a
@@ -665,12 +645,10 @@ touchscreen:
           id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
           ESP_LOGD("gt911_touchscreen", "Touch at x=%i, y=%i", touch.x, touch.y);
     on_release:
-      - script.execute: saver_enabled 
-   
-
+      - script.execute: saver_enabled
 
 binary_sensor:
-###### top left hand physical button #######
+  ###### top left hand physical button #######
   - platform: gpio
     id: top_left_button
     pin:
@@ -696,8 +674,8 @@ binary_sensor:
       #           - script.execute: saver_enabled
       #           - display.page.show: saver_page
       #           - component.update: s3_box_lcd
-            
-# #######     red circle home button   #####################
+
+  # #######     red circle home button   #####################
   - platform: gt911
     id: home_button
     index: 0
@@ -705,15 +683,13 @@ binary_sensor:
       - lvgl.page.show: page_main
       # if:
       #   condition:
-      #     - display.is_displaying_page: idle_page  
+      #     - display.is_displaying_page: idle_page
       #   then:
       #     - script.execute: saver_enabled
-      #   else: 
+      #   else:
       #     - lambda: id(led).turn_on().set_brightness(id(s_default_brightness).state /100).perform();
       #     - display.page.show: idle_page
       #     - component.update: s3_box_lcd
 
   - !for $_.hass.binary_sensor: !()
-    - !? $
-
-  
+      - !? $
