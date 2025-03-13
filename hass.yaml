@@ -8,8 +8,8 @@ text_sensor:
     on_value:
       - lvgl.label.update:
           id: label_weather_main_icon
-          text: !lambda return get_weather_icon(id(openweathermap_condition).state);
-          text_color: !lambda return get_weather_icon_color(id(openweathermap_condition).state);
+          text: !lambda return get_weather_icon(id(openweathermap_condition).state, get_time_of_day() != "night");
+          text_color: !lambda return get_weather_icon_color(id(openweathermap_condition).state, get_time_of_day() != "night");
           
   - platform: homeassistant
     name: "Sun next dawn"

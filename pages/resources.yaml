@@ -89,6 +89,7 @@ icon_glyphs: !-
   weather_rainy: "\U000F0597"
   weather_snowy: "\U000F0598"
   weather_sunny: "\U000F0599"
+  weather_snowy_rainy: "\U000F067F"
   weather_sunset: "\U000F059A"
   weather_sunset_down: "\U000F059B"
   weather_sunset_up: "\U000F059C"

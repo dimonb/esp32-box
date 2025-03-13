@@ -221,46 +221,15 @@ interval:
     then:
       - lambda: |-
           if (id(brightness_auto).state) {
-            auto now = id(ha_time).now();
-            // Get sensor strings in ISO8601 (UTC)
-            std::string dawn_str = id(sun_next_dawn).state;
-            std::string dusk_str = id(sun_next_dusk).state;
-
-            // Strip timezone: "YYYY-MM-DDTHH:MM:SS" -> "YYYY-MM-DD HH:MM:SS"
-            if (dawn_str.size() >= 19) { dawn_str = dawn_str.substr(0, 19); dawn_str[10] = ' '; }
-            if (dusk_str.size() >= 19) { dusk_str = dusk_str.substr(0, 19); dusk_str[10] = ' '; }
-            ESP_LOGD("auto_brightness", "Dawn: %s, Dusk: %s", dawn_str.c_str(), dusk_str.c_str());
-
-            ESPTime dawn_utc, dusk_utc;
-            if (!ESPTime::strptime(dawn_str, dawn_utc) || !ESPTime::strptime(dusk_str, dusk_utc)) {
-              ESP_LOGE("auto_brightness", "Failed to parse sun times");
-              return;
-            }
-
-            ESP_LOGD("auto_brightness", "Dawn UTC: %s, Dusk UTC: %s", dawn_utc.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_utc.strftime("%Y-%m-%d %H:%M:%S").c_str());
-
-            dawn_utc.day_of_week = 1;  //workaround for bug in ESPTime, which require this field to be filled
-            dusk_utc.day_of_week = 1;
-            dawn_utc.day_of_year = 1;
-            dusk_utc.day_of_year = 1;
-
-            // Recalculate timestamps assuming parsed fields are in UTC
-            dawn_utc.recalc_timestamp_utc(false);
-            dusk_utc.recalc_timestamp_utc(false);
-            ESP_LOGD("auto_brightness", "Dawn UTC timestamp: %ld, Dusk UTC timestamp: %ld", dawn_utc.timestamp, dusk_utc.timestamp);
-
-            // Convert UTC to local time
-            ESPTime dawn_local = ESPTime::from_epoch_local(dawn_utc.timestamp);
-            ESPTime dusk_local = ESPTime::from_epoch_local(dusk_utc.timestamp);
-
-            ESP_LOGD("auto_brightness", "Dawn local: %s, Dusk local: %s", dawn_local.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_local.strftime("%Y-%m-%d %H:%M:%S").c_str());
-
+            std::string time_of_day = get_time_of_day();
             int new_brightness = 100;
             // Use local dawn/dusk times for comparison
-            if (dusk_local.timestamp < dawn_local.timestamp) {
+            if (time_of_day == "day" || time_of_day == "morning") {
               new_brightness = 100;
+            } else if (time_of_day == "evening") {
+              new_brightness = 65;
             } else {
-              new_brightness = (now.hour >= dusk_local.hour && now.hour < 20) ? 65 : 45;
+              new_brightness = 45;
             }
 
             if (new_brightness != static_cast<int>(id(s_default_brightness).state)) {

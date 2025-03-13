@@ -5,6 +5,57 @@
 #include "esphome/core/color.h"
 #include "esphome/core/defines.h"
 
+
+std::string get_time_of_day() {
+  auto now = id(ha_time).now();
+
+  // Get sensor strings in ISO8601 (UTC)
+  std::string dawn_str = id(sun_next_dawn).state;
+  std::string dusk_str = id(sun_next_dusk).state;
+
+  // Strip timezone: "YYYY-MM-DDTHH:MM:SS" -> "YYYY-MM-DD HH:MM:SS"
+  if (dawn_str.size() >= 19) { dawn_str = dawn_str.substr(0, 19); dawn_str[10] = ' '; }
+  if (dusk_str.size() >= 19) { dusk_str = dusk_str.substr(0, 19); dusk_str[10] = ' '; }
+  ESP_LOGD("time_of_day", "Dawn: %s, Dusk: %s", dawn_str.c_str(), dusk_str.c_str());
+
+  ESPTime dawn_utc, dusk_utc;
+  if (!ESPTime::strptime(dawn_str, dawn_utc) || !ESPTime::strptime(dusk_str, dusk_utc)) {
+    ESP_LOGE("time_of_day", "Failed to parse sun times");
+    return "error";
+  }
+
+
+  dawn_utc.day_of_week = 1;  //workaround for bug in ESPTime, which require this field to be filled
+  dusk_utc.day_of_week = 1;
+  dawn_utc.day_of_year = 1;
+  dusk_utc.day_of_year = 1;
+  // Recalculate timestamps assuming parsed fields are in UTC
+  dawn_utc.recalc_timestamp_utc(false);
+  dusk_utc.recalc_timestamp_utc(false);
+  ESP_LOGD("auto_brightness", "Dawn UTC timestamp: %ld, Dusk UTC timestamp: %ld", dawn_utc.timestamp, dusk_utc.timestamp);
+
+  // Convert UTC timestamps to local time
+  ESPTime dawn_local = ESPTime::from_epoch_local(dawn_utc.timestamp);
+  ESPTime dusk_local = ESPTime::from_epoch_local(dusk_utc.timestamp);
+
+  ESP_LOGD("time_of_day", "Dawn local: %s, Dusk local: %s", dawn_local.strftime("%Y-%m-%d %H:%M:%S").c_str(), dusk_local.strftime("%Y-%m-%d %H:%M:%S").c_str());
+
+  std::string time_of_day;
+
+  if (now.hour >= dawn_local.hour && now.hour < 10) {
+      time_of_day = "morning";
+  } else if (now.hour >= 10 && now.hour < dusk_local.hour - 2) {
+      time_of_day = "day";
+  } else if (now.hour >= dusk_local.hour - 2 && now.hour < dusk_local.hour + 2) {
+      time_of_day = "evening";
+  } else {
+      time_of_day = "night";
+  }
+
+  ESP_LOGI("time_of_day", "Current time of day: %s", time_of_day.c_str());
+  return time_of_day;
+}
+
 lv_color_t lv_color_make(esphome::Color color) {
   return lv_color_make(color.r, color.g, color.b);
 }
@@ -14,13 +65,13 @@ lv_color_t co2_color(T co2) {
   return co2 > 1500 ? lv_color_make(id(red)) : co2 > 1000 ? lv_color_make(id(amber)) : lv_color_make(id(green));
 }
 
-std::string get_weather_icon(const std::string &condition) {
+std::string get_weather_icon(const std::string &condition, bool is_day) {
   if(condition == "clear-night") {
     return "\U000F0594";  // weather_night
   } else if(condition == "cloudy") {
     return "\U000F0590";  // weather_cloudy
   } else if(condition == "exceptional") {
-    return "\U000F0599";  // weather_sunny
+    return is_day?"\U000F0599":"\U000F0594";  // weather_sunny
   } else if(condition == "fog") {
     return "\U000F0591";  // weather_fog
   } else if(condition == "hail") {
@@ -36,22 +87,22 @@ std::string get_weather_icon(const std::string &condition) {
   } else if(condition == "rainy") {
     return "\U000F0597";  // weather_rainy
   } else if(condition == "snowy-rainy") {
-    return "\U000F0598";  // weather_snowy
+    return "\U000F067F";  // weather_snowy
   } else if(condition == "snowy") {
     return "\U000F0598";  // weather_snowy
   } else if(condition == "sunny") {
-    return "\U000F0599";  // weather_sunny
+    return is_day?"\U000F0599":"\U000F0594";  // weather_sunny
   } else if(condition == "windy-variant") {
     return "\U000F059E";  // weather_windy_variant
   } else if(condition == "windy") {
     return "\U000F059D";  // weather_windy
   } else {
-    return "\U000F0599";  // weather_sunny
+    return is_day?"\U000F0599":"\U000F0594";  // weather_sunny
   }    
 }
 
-lv_color_t get_weather_icon_color(const std::string &condition) {
-    if (condition == "clear-night") {
+lv_color_t get_weather_icon_color(const std::string &condition, bool is_day) {
+    if (condition == "clear-night" || !is_day ) {
         return lv_color_make(id(blue));  
     } else if (condition == "sunny" || condition == "exceptional" || condition == "partlycloudy") {
         return lv_color_make(id(yellow));
@@ -334,7 +385,6 @@ void processWeatherData() {
     }
 }
 
-
 static void draw_weather_chart(lv_obj_t *obj) {
   if(chart == nullptr) {
     chart = lv_chart_create(obj);
@@ -391,7 +441,6 @@ static void draw_weather_chart(lv_obj_t *obj) {
 
 
 }
-
 
 
 #endif
