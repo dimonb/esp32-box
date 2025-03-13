@@ -1,3 +1,5 @@
+top_layer: !- $import('pages/top_layer.yaml')
+
 number:
   - id: s_saver_delay
     platform: template
@@ -101,12 +103,16 @@ switch:
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
-    # on_turn_on:
-    #   then:
+    on_turn_on:
+      then:
+        - !? $_.top_layer.mic_status_update.action
     #     - logger.log:
     #         format: "Mute switch turned on"
         # - voice_assistant.stop
         # - micro_wake_word.stop
+    on_turn_off:
+      then:
+        - !? $_.top_layer.mic_status_update.action
     # on_turn_off:
     #   - logger.log:
     #       format: "Mute switch turned off"

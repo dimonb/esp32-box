@@ -9,6 +9,11 @@ mic_status_update: !-
     format: "%s"
     args:
       - !? '"id(mute_switch).state ? \"" + $_.icon_glyphs.mic_off + "\" : \"" + $_.icon_glyphs.mic_on + "\""'
+  action:
+    lvgl.label.update:
+        id: mic_status
+        text_color: !? $_.mic_status_update.text_color
+        text: !? $_.mic_status_update.text
 
 wifi_status_update: !-
   text_color: !lambda |-

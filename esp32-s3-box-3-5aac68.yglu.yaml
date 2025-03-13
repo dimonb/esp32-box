@@ -211,6 +211,9 @@ interval:
       - lambda: |-
           if (id(brightness_auto).state) {
             std::string time_of_day = get_time_of_day();
+            if (time_of_day == "error") {
+              return;
+            }
             int new_brightness = 100;
             // Use local dawn/dusk times for comparison
             if (time_of_day == "day" || time_of_day == "morning") {
