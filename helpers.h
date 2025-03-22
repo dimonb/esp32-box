@@ -44,9 +44,9 @@ std::string get_time_of_day() {
 
   if (now.hour >= dawn_local.hour && now.hour < 10) {
       time_of_day = "morning";
-  } else if (now.hour >= 10 && now.hour < dusk_local.hour - 2) {
+  } else if (now.hour >= 10 && now.hour < dusk_local.hour + 1) {
       time_of_day = "day";
-  } else if (now.hour >= dusk_local.hour - 2 && now.hour < dusk_local.hour + 2) {
+  } else if (now.hour >= dusk_local.hour + 1 && now.hour < dusk_local.hour + 4) {
       time_of_day = "evening";
   } else {
       time_of_day = "night";
